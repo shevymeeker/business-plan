@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Plan Builder</title>
+    <style>
+    /* All CSS embedded here */
+    :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #3498db;
+        --success-color: #27ae60;
+        --warning-color: #f39c12;
+        --danger-color: #e74c3c;
+        --light-bg: #ecf0f1;
+        --white: #ffffff;
+        --text-dark: #2c3e50;
+        --text-light: #7f8c8d;
+        --border-color: #bdc3c7;
+        --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        line-height: 1.6;
+        color: var(--text-dark);
+        background-color: var(--light-bg);
+    }
+
+    #app {
+        min-height: 100vh;
+    }
+
+    .mode-container {
+        min-height: 100vh;
+    }
+
+    /* Header */
+    .app-header {
+        background: var(--primary-color);
+        color: var(--white);
+        padding: 1rem 2rem;
+        box-shadow: var(--shadow);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+
+    .header-content {
+        max-width: 1400px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .app-header h1 {
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .save-status {
+        font-size: 0.875rem;
+        color: var(--success-color);
+        padding: 0.5rem 1rem;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+    }
+
+    .save-status.saving {
+        color: var(--warning-color);
+    }
+
+    /* Wizard Container */
+    .wizard-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        background: var(--white);
+        border-radius: 8px;
+        box-shadow: var(--shadow-lg);
+        overflow: hidden;
+    }
+
+    /* Progress Steps */
+    .progress-steps {
+        display: flex;
+        justify-content: space-between;
+        padding: 2rem;
+        background: linear-gradient(to bottom, #ffffff 0%, #f8f9fa 100%);
+        border-bottom: 2px solid var(--border-color);
+        overflow-x: auto;
+    }
+
+    .step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        flex: 1;
+        min-width: 100px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .step:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        top: 20px;
+        left: 50%;
+        width: 100%;
+        height: 2px;
+        background: var(--border-color);
+        z-index: 0;
+    }
+
+    .step.active:not(:last-child)::after,
+    .step.completed:not(:last-child)::after {
+        background: var(--secondary-color);
+    }
+
+    .step-number {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--white);
+        border: 2px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        color: var(--text-light);
+        margin-bottom: 0.5rem;
+        position: relative;
+        z-index: 1;
+        transition: all 0.3s ease;
+    }
+
+    .step.active .step-number {
+        background: var(--secondary-color);
+        border-color: var(--secondary-color);
+        color: var(--white);
+        transform: scale(1.1);
+    }
+
+    .step.completed .step-number {
+        background: var(--success-color);
+        border-color: var(--success-color);
+        color: var(--white);
+    }
+
+    .step.completed .step-number::before {
+        content: '✓';
+    }
+
+    .step-label {
+        font-size: 0.75rem;
+        color: var(--text-light);
+        text-align: center;
+        font-weight: 500;
+    }
+
+    .step.active .step-label {
+        color: var(--secondary-color);
+        font-weight: 600;
+    }
+
+    /* Wizard Content */
+    .wizard-content {
+        padding: 2rem;
+        min-height: 500px;
+    }
+
+    .wizard-step {
+        display: none;
+        animation: fadeIn 0.3s ease;
+    }
+
+    .wizard-step.active {
+        display: block;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .wizard-step h2 {
+        color: var(--primary-color);
+        margin-bottom: 1.5rem;
+        font-size: 1.75rem;
+    }
+
+    .wizard-step h3 {
+        color: var(--primary-color);
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+        font-size: 1.25rem;
+    }
+
+    /* Form Elements */
+    .form-section {
+        margin-bottom: 2rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+
+    label {
+        display: block;
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+    }
+
+    .help-text {
+        font-size: 0.875rem;
+        color: var(--text-light);
+        margin-bottom: 0.5rem;
+        font-style: italic;
+    }
+
+    .form-input,
+    .form-textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid var(--border-color);
+        border-radius: 4px;
+        font-size: 1rem;
+        font-family: inherit;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .form-input:focus,
+    .form-textarea:focus {
+        outline: none;
+        border-color: var(--secondary-color);
+        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    }
+
+    .form-textarea {
+        resize: vertical;
+        line-height: 1.6;
+    }
+
+    .form-input[readonly] {
+        background-color: var(--light-bg);
+        cursor: not-allowed;
+    }
+
+    /* Buttons */
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 4px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: inherit;
+    }
+
+    .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .btn-primary {
+        background: var(--secondary-color);
+        color: var(--white);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+        background: #2980b9;
+        transform: translateY(-1px);
+        box-shadow: var(--shadow);
+    }
+
+    .btn-secondary {
+        background: var(--white);
+        color: var(--primary-color);
+        border: 2px solid var(--border-color);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+        border-color: var(--secondary-color);
+        color: var(--secondary-color);
+        transform: translateY(-1px);
+    }
+
+    .btn-large {
+        padding: 1rem 2rem;
+        font-size: 1.125rem;
+    }
+
+    /* Wizard Navigation */
+    .wizard-nav {
+        display: flex;
+        justify-content: space-between;
+        padding: 1.5rem 2rem;
+        background: var(--light-bg);
+        border-top: 2px solid var(--border-color);
+    }
+
+    /* Phase Management */
+    #phases-container {
+        margin-bottom: 1.5rem;
+    }
+
+    .phase-item {
+        background: #f8f9fa;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        position: relative;
+    }
+
+    .phase-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .phase-title {
+        font-weight: 600;
+        color: var(--primary-color);
+        font-size: 1.1rem;
+    }
+
+    .remove-phase-btn {
+        background: var(--danger-color);
+        color: var(--white);
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.875rem;
+        transition: all 0.3s ease;
+    }
+
+    .remove-phase-btn:hover {
+        background: #c0392b;
+    }
+
+    /* Calculated Results */
+    .calculated-results {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: var(--white);
+        padding: 2rem;
+        border-radius: 8px;
+        margin-top: 2rem;
+    }
+
+    .calc-result {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .calc-result:last-child {
+        border-bottom: none;
+    }
+
+    .calc-result span:first-child {
+        font-weight: 500;
+    }
+
+    .calc-result span:last-child {
+        font-weight: 700;
+        font-size: 1.25rem;
+    }
+
+    .calc-result.highlight {
+        background: rgba(255, 255, 255, 0.1);
+        margin: 0 -1rem;
+        padding: 1rem;
+        border-radius: 4px;
+    }
+
+    /* Preview Mode */
+    .preview-header {
+        background: var(--primary-color);
+        color: var(--white);
+        padding: 1rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        box-shadow: var(--shadow);
+    }
+
+    .print-preview {
+        max-width: 8.5in;
+        margin: 2rem auto;
+        background: var(--white);
+        padding: 1in;
+        box-shadow: var(--shadow-lg);
+        min-height: 11in;
+    }
+
+    /* Action Buttons & Notices */
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .preview-notice {
+        background: #e8f4f8;
+        border-left: 4px solid var(--secondary-color);
+        padding: 1rem;
+        margin-top: 2rem;
+        border-radius: 4px;
+    }
+
+    .preview-notice p {
+        margin: 0;
+        color: var(--text-dark);
+    }
+
+    /* Print Styles */
+    @media print {
+        .app-header,
+        .progress-steps,
+        .wizard-nav,
+        .preview-header,
+        .action-buttons,
+        .preview-notice,
+        #editor-mode {
+            display: none !important;
+        }
+
+        #preview-mode {
+            display: block !important;
+        }
+
+        .print-preview {
+            margin: 0;
+            padding: 0;
+            box-shadow: none;
+        }
+
+        body {
+            background: white;
+        }
+
+        .print-section h2 {
+            border-bottom: 2px solid #2c3e50;
+            padding-bottom: 0.25em;
+        }
+
+        .print-cover {
+            text-align: center;
+            padding: 3in 1in;
+            page-break-after: always;
+        }
+
+        .print-cover h1 {
+            font-size: 32pt;
+            margin-bottom: 2em;
+        }
+
+        .print-cover .company-name {
+            font-size: 28pt;
+            font-weight: bold;
+            margin: 2em 0;
+            color: #2c3e50;
+        }
+
+        .print-page-break {
+            page-break-before: always;
+        }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .header-content {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .wizard-content {
+            padding: 1rem;
+        }
+    }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Editor Mode -->
+        <div id="editor-mode" class="mode-container">
+            <header class="app-header">
+                <div class="header-content">
+                    <h1>Business Plan Builder</h1>
+                    <div class="header-actions">
+                        <span id="save-status" class="save-status">All changes saved</span>
+                        <button id="preview-btn" class="btn btn-secondary">Preview</button>
+                        <button id="export-btn" class="btn btn-secondary">Export Data</button>
+                        <button id="import-btn" class="btn btn-secondary">Import Data</button>
+                        <input type="file" id="import-file" accept=".json" style="display: none;">
+                    </div>
+                </div>
+            </header>
+
+            <div class="wizard-container">
+                <!-- Progress Steps -->
+                <div class="progress-steps">
+                    <div class="step active" data-step="1">
+                        <div class="step-number">1</div>
+                        <div class="step-label">Cover Page</div>
+                    </div>
+                    <div class="step" data-step="2">
+                        <div class="step-number">2</div>
+                        <div class="step-label">Objectives</div>
+                    </div>
+                    <div class="step" data-step="3">
+                        <div class="step-number">3</div>
+                        <div class="step-label">Goals</div>
+                    </div>
+                    <div class="step" data-step="4">
+                        <div class="step-number">4</div>
+                        <div class="step-label">Solution</div>
+                    </div>
+                    <div class="step" data-step="5">
+                        <div class="step-number">5</div>
+                        <div class="step-label">Project Outline</div>
+                    </div>
+                    <div class="step" data-step="6">
+                        <div class="step-number">6</div>
+                        <div class="step-label">Budget</div>
+                    </div>
+                    <div class="step" data-step="7">
+                        <div class="step-number">7</div>
+                        <div class="step-label">Review</div>
+                    </div>
+                </div>
+
+                <!-- Wizard Content -->
+                <div class="wizard-content">
+                    <!-- Step 1: Cover Page -->
+                    <div class="wizard-step active" data-step="1">
+                        <h2>Cover Page Information</h2>
+                        <div class="form-section">
+                            <div class="form-group">
+                                <label for="projectTitle">Project Title</label>
+                                <input type="text" id="projectTitle" class="form-input" placeholder="e.g., Project Proposal">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="preparedFor">Prepared For</label>
+                                    <input type="text" id="preparedFor" class="form-input" placeholder="Client name">
+                                </div>
+                                <div class="form-group">
+                                    <label for="preparedBy">Prepared By</label>
+                                    <input type="text" id="preparedBy" class="form-input" placeholder="Your name">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="proposalDate">Date</label>
+                                    <input type="date" id="proposalDate" class="form-input">
+                                </div>
+                                <div class="form-group">
+                                    <label for="proposalNumber">Proposal Number</label>
+                                    <input type="text" id="proposalNumber" class="form-input" placeholder="e.g., 123-4567">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="companyName">Company Name</label>
+                                <input type="text" id="companyName" class="form-input" placeholder="e.g., PAR 4 HOMES">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Objectives -->
+                    <div class="wizard-step" data-step="2">
+                        <h2>Objectives</h2>
+                        <div class="form-section">
+                            <div class="form-group">
+                                <label for="objective">Primary Objective</label>
+                                <p class="help-text">Describe the main goal of this project in 2-3 sentences.</p>
+                                <textarea id="objective" class="form-textarea" rows="5"
+                                    placeholder="To develop a premium residential community that maximizes return on investment..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="financialObjective">Financial Objective</label>
+                                <p class="help-text">State the specific financial goal (ROI, revenue target, timeline).</p>
+                                <textarea id="financialObjective" class="form-textarea" rows="3"
+                                    placeholder="Generate a minimum 40% ROI within 5-6 years..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Steps 3-7 would continue here but truncated for space -->
+                    <!-- I'll include a simplified version -->
+
+                    <div class="wizard-step" data-step="7">
+                        <h2>Review & Export</h2>
+                        <div class="form-section">
+                            <p class="help-text">This is a simplified standalone version. Click Print to see your business plan.</p>
+                            <div class="action-buttons">
+                                <button id="print-btn" class="btn btn-primary btn-large">Print Business Plan</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation -->
+                <div class="wizard-nav">
+                    <button id="prev-btn" class="btn btn-secondary" disabled>Previous</button>
+                    <button id="next-btn" class="btn btn-primary">Next</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Print Preview Mode -->
+        <div id="preview-mode" class="mode-container" style="display: none;">
+            <div class="preview-header">
+                <button id="back-to-edit-btn" class="btn btn-secondary">Back to Editor</button>
+                <button id="print-preview-btn" class="btn btn-primary">Print</button>
+            </div>
+            <div id="print-content" class="print-preview">
+                <!-- Content will be generated here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // Simplified version for testing
+    let currentStep = 1;
+    const totalSteps = 7;
+
+    document.getElementById('next-btn').addEventListener('click', () => {
+        if (currentStep < totalSteps) {
+            currentStep++;
+            updateUI();
+        }
+    });
+
+    document.getElementById('prev-btn').addEventListener('click', () => {
+        if (currentStep > 1) {
+            currentStep--;
+            updateUI();
+        }
+    });
+
+    function updateUI() {
+        // Update steps
+        document.querySelectorAll('.wizard-step').forEach(step => {
+            step.classList.remove('active');
+        });
+        document.querySelector(`.wizard-step[data-step="${currentStep}"]`).classList.add('active');
+
+        // Update progress
+        document.querySelectorAll('.step').forEach(step => {
+            const stepNum = parseInt(step.dataset.step);
+            step.classList.remove('active', 'completed');
+            if (stepNum === currentStep) step.classList.add('active');
+            else if (stepNum < currentStep) step.classList.add('completed');
+        });
+
+        // Update buttons
+        document.getElementById('prev-btn').disabled = currentStep === 1;
+    }
+
+    document.getElementById('print-btn').addEventListener('click', () => {
+        alert('This is a simplified test version. The full version with all features is in index.html - please access it via http://localhost:8000/');
+    });
+
+    // Set today's date
+    document.getElementById('proposalDate').value = new Date().toISOString().split('T')[0];
+
+    alert('✅ SUCCESS! CSS and JavaScript are loading!\n\nThis is a simplified standalone version that works without a server.\n\nFor the FULL version with all features:\n1. Make sure the web server is running\n2. Go to: http://localhost:8000/index.html');
+    </script>
+</body>
+</html>
