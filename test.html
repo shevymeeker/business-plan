@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Setup Test</title>
+</head>
+<body>
+    <h1>Business Plan Builder - Setup Test</h1>
+    <ul>
+        <li>✓ Web server is running</li>
+        <li id="css-test" style="color: red;">✗ CSS not loaded</li>
+        <li id="js-test" style="color: red;">✗ JavaScript not loaded</li>
+    </ul>
+
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        // Test if files load
+        fetch('styles.css')
+            .then(r => r.ok ? document.getElementById('css-test').innerHTML = '✓ CSS loaded successfully' : null)
+            .then(() => document.getElementById('css-test').style.color = 'green');
+
+        fetch('app.js')
+            .then(r => r.ok ? document.getElementById('js-test').innerHTML = '✓ JavaScript loaded successfully' : null)
+            .then(() => document.getElementById('js-test').style.color = 'green');
+    </script>
+
+    <hr>
+    <p><a href="index.html">Go to Business Plan Builder</a></p>
+</body>
+</html>
