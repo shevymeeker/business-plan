@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Professional Business Plan Builder - Offline First">
+    <meta name="theme-color" content="#2c3e50">
+    <title>Business Plan Builder</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="print.css" media="print">
+</head>
+<body>
+    <div id="app">
+        <!-- Editor Mode -->
+        <div id="editor-mode" class="mode-container">
+            <header class="app-header">
+                <div class="header-content">
+                    <h1>Business Plan Builder</h1>
+                    <div class="header-actions">
+                        <span id="online-status" class="online-status">🟢 Online</span>
+                        <span id="save-status" class="save-status">All changes saved</span>
+                        <button id="preview-btn" class="btn btn-secondary">Preview</button>
+                        <button id="export-btn" class="btn btn-secondary">Export Data</button>
+                        <button id="import-btn" class="btn btn-secondary">Import Data</button>
+                        <input type="file" id="import-file" accept=".json" style="display: none;">
+                    </div>
+                </div>
+            </header>
+
+            <div class="wizard-container">
+                <!-- Progress Steps -->
+                <div class="progress-steps">
+                    <div class="step active" data-step="1">
+                        <div class="step-number">1</div>
+                        <div class="step-label">Cover Page</div>
+                    </div>
+                    <div class="step" data-step="2">
+                        <div class="step-number">2</div>
+                        <div class="step-label">Objectives</div>
+                    </div>
+                    <div class="step" data-step="3">
+                        <div class="step-number">3</div>
+                        <div class="step-label">Goals</div>
+                    </div>
+                    <div class="step" data-step="4">
+                        <div class="step-number">4</div>
+                        <div class="step-label">Solution</div>
+                    </div>
+                    <div class="step" data-step="5">
+                        <div class="step-number">5</div>
+                        <div class="step-label">Project Outline</div>
+                    </div>
+                    <div class="step" data-step="6">
+                        <div class="step-number">6</div>
+                        <div class="step-label">Budget</div>
+                    </div>
+                    <div class="step" data-step="7">
+                        <div class="step-number">7</div>
+                        <div class="step-label">Review</div>
+                    </div>
+                </div>
+
+                <!-- Wizard Content -->
+                <div class="wizard-content">
+                    <!-- Step 1: Cover Page -->
+                    <div class="wizard-step active" data-step="1">
+                        <h2>Cover Page Information</h2>
+                        <div class="form-section">
+                            <div class="form-group">
+                                <label for="projectTitle">Project Title</label>
+                                <input type="text" id="projectTitle" class="form-input" placeholder="e.g., Project Proposal">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="preparedFor">Prepared For</label>
+                                    <input type="text" id="preparedFor" class="form-input" placeholder="Client name">
+                                </div>
+                                <div class="form-group">
+                                    <label for="preparedBy">Prepared By</label>
+                                    <input type="text" id="preparedBy" class="form-input" placeholder="Your name">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="proposalDate">Date</label>
+                                    <input type="date" id="proposalDate" class="form-input">
+                                </div>
+                                <div class="form-group">
+                                    <label for="proposalNumber">Proposal Number</label>
+                                    <input type="text" id="proposalNumber" class="form-input" placeholder="e.g., 123-4567">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="companyName">Company Name</label>
+                                <input type="text" id="companyName" class="form-input" placeholder="e.g., PAR 4 HOMES">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Objectives -->
+                    <div class="wizard-step" data-step="2">
+                        <h2>Objectives</h2>
+                        <div class="form-section">
+                            <div class="form-group">
+                                <label for="objective">Primary Objective</label>
+                                <p class="help-text">Describe the main goal of this project in 2-3 sentences.</p>
+                                <textarea id="objective" class="form-textarea" rows="5"
+                                    placeholder="To develop a premium residential community that maximizes return on investment..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="financialObjective">Financial Objective</label>
+                                <p class="help-text">State the specific financial goal (ROI, revenue target, timeline).</p>
+                                <textarea id="financialObjective" class="form-textarea" rows="3"
+                                    placeholder="Generate a minimum 40% ROI within 5-6 years..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Goals -->
+                    <div class="wizard-step" data-step="3">
+                        <h2>Goals</h2>
+                        <div class="form-section">
+                            <div class="form-group">
+                                <label for="shortTermGoals">Short-term Goals (1-2 years)</label>
+                                <p class="help-text">Enter each goal on a new line. They will appear as bullet points.</p>
+                                <textarea id="shortTermGoals" class="form-textarea bullet-list" rows="8"
+                                    placeholder="Establish partnerships with 3-4 local builders&#10;Complete all necessary engineering and permitting&#10;Pre-sell 20% of total lots"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="mediumTermGoals">Medium-term Goals (Years 2-3)</label>
+                                <textarea id="mediumTermGoals" class="form-textarea bullet-list" rows="8"
+                                    placeholder="Sell minimum 70% of Phase 1 lots&#10;Complete Phase 2 infrastructure&#10;Maintain consistent absorption rate"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="longTermGoals">Long-term Goals (Years 3-5)</label>
+                                <textarea id="longTermGoals" class="form-textarea bullet-list" rows="8"
+                                    placeholder="Complete all infrastructure for Phase 3&#10;Sell remaining lots by end of year 5&#10;Achieve minimum ROI for all stakeholders"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Solution -->
+                    <div class="wizard-step" data-step="4">
+                        <h2>Solution & Development Strategy</h2>
+                        <div class="form-section">
+                            <div class="form-group">
+                                <label for="developmentStrategy">Development Strategy Overview</label>
+                                <p class="help-text">Describe the overall approach and strategy.</p>
+                                <textarea id="developmentStrategy" class="form-textarea" rows="5"
+                                    placeholder="Comprehensive solution to meet housing needs across multiple market segments..."></textarea>
+                            </div>
+
+                            <h3>Development Phases</h3>
+                            <div id="phases-container">
+                                <!-- Phases will be added dynamically -->
+                            </div>
+                            <button type="button" id="add-phase-btn" class="btn btn-secondary">+ Add Phase</button>
+
+                            <div class="form-group">
+                                <label for="riskMitigation">Risk Mitigation</label>
+                                <p class="help-text">Enter each risk mitigation strategy on a new line.</p>
+                                <textarea id="riskMitigation" class="form-textarea bullet-list" rows="6"
+                                    placeholder="Infrastructure investment tied to sales performance&#10;Each phase begins after 70% sales in previous phase"></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="marketDifferentiation">Market Differentiation</label>
+                                <p class="help-text">Enter each unique amenity or competitive advantage on a new line.</p>
+                                <textarea id="marketDifferentiation" class="form-textarea bullet-list" rows="6"
+                                    placeholder="Golf course views from majority of lots&#10;Proximity to amenities&#10;High elevation with no flooding concerns"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 5: Project Outline -->
+                    <div class="wizard-step" data-step="5">
+                        <h2>Project Outline</h2>
+                        <div class="form-section">
+                            <h3>Property Details</h3>
+                            <div class="form-group">
+                                <label for="propertyLocation">Location</label>
+                                <input type="text" id="propertyLocation" class="form-input"
+                                    placeholder="e.g., Behind Eastview Elementary School, Thurston, Daviess County Kentucky">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="propertySize">Property Size (acres)</label>
+                                    <input type="number" id="propertySize" class="form-input" placeholder="100" step="0.1">
+                                </div>
+                                <div class="form-group">
+                                    <label for="totalLots">Total Buildable Lots</label>
+                                    <input type="number" id="totalLots" class="form-input" placeholder="81">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="currentStatus">Current Status</label>
+                                <input type="text" id="currentStatus" class="form-input"
+                                    placeholder="e.g., Undeveloped with approved residential zoning">
+                            </div>
+                            <div class="form-group">
+                                <label for="acquisitionCost">Acquisition Cost ($)</label>
+                                <input type="number" id="acquisitionCost" class="form-input" placeholder="1300000" step="1000">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 6: Budget -->
+                    <div class="wizard-step" data-step="6">
+                        <h2>Budget & Financial Projections</h2>
+                        <div class="form-section">
+                            <h3>Capital Requirements</h3>
+                            <div class="form-group">
+                                <label for="landAcquisition">Land Acquisition ($)</label>
+                                <input type="number" id="landAcquisition" class="form-input calc-input" placeholder="1300000" step="1000">
+                            </div>
+                            <div class="form-group">
+                                <label for="infrastructureDev">Infrastructure Development ($)</label>
+                                <input type="number" id="infrastructureDev" class="form-input calc-input" placeholder="3000000" step="1000">
+                            </div>
+
+                            <h3>Investment Structure</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="numberOfInvestors">Number of Investors</label>
+                                    <input type="number" id="numberOfInvestors" class="form-input calc-input" placeholder="5" min="1">
+                                </div>
+                                <div class="form-group">
+                                    <label for="investmentPerInvestor">Investment per Investor ($)</label>
+                                    <input type="number" id="investmentPerInvestor" class="form-input" placeholder="860000" readonly>
+                                </div>
+                            </div>
+
+                            <h3>Projected Revenues</h3>
+                            <div class="form-group">
+                                <label for="totalLotSales">Total Lot Sales Revenue ($)</label>
+                                <input type="number" id="totalLotSales" class="form-input calc-input" placeholder="7865000" step="1000">
+                            </div>
+                            <div class="calculated-results">
+                                <div class="calc-result">
+                                    <span>Gross Profit:</span>
+                                    <span id="grossProfit">$0</span>
+                                </div>
+                                <div class="calc-result">
+                                    <span>ROI:</span>
+                                    <span id="roi">0%</span>
+                                </div>
+                                <div class="calc-result">
+                                    <span>Gross Profit per Investor:</span>
+                                    <span id="grossProfitPerInvestor">$0</span>
+                                </div>
+                            </div>
+
+                            <h3>Operating Expenses (Annual)</h3>
+                            <div class="form-group">
+                                <label for="marketingExpenses">Marketing & Advertising ($/year)</label>
+                                <input type="number" id="marketingExpenses" class="form-input calc-input" placeholder="10000" step="1000">
+                            </div>
+                            <div class="form-group">
+                                <label for="propertyTaxes">Property Taxes ($/year)</label>
+                                <input type="number" id="propertyTaxes" class="form-input calc-input" placeholder="15000" step="1000">
+                            </div>
+                            <div class="form-group">
+                                <label for="salesCommission">Sales Commission (%)</label>
+                                <input type="number" id="salesCommission" class="form-input calc-input" placeholder="5" step="0.1" min="0" max="100">
+                            </div>
+                            <div class="form-group">
+                                <label for="legalAccounting">Legal & Accounting Fees ($/year)</label>
+                                <input type="number" id="legalAccounting" class="form-input calc-input" placeholder="10000" step="1000">
+                            </div>
+                            <div class="form-group">
+                                <label for="maintenanceExpenses">Maintenance ($/year)</label>
+                                <input type="number" id="maintenanceExpenses" class="form-input calc-input" placeholder="15000" step="1000">
+                            </div>
+                            <div class="form-group">
+                                <label for="projectYears">Project Duration (years)</label>
+                                <input type="number" id="projectYears" class="form-input calc-input" placeholder="5" min="1">
+                            </div>
+
+                            <div class="calculated-results">
+                                <div class="calc-result">
+                                    <span>Total Sales Commission:</span>
+                                    <span id="totalCommission">$0</span>
+                                </div>
+                                <div class="calc-result">
+                                    <span>Total Operating Expenses:</span>
+                                    <span id="totalOperating">$0</span>
+                                </div>
+                                <div class="calc-result highlight">
+                                    <span>Net Profit After Expenses:</span>
+                                    <span id="netProfit">$0</span>
+                                </div>
+                                <div class="calc-result highlight">
+                                    <span>Net Profit per Investor:</span>
+                                    <span id="netProfitPerInvestor">$0</span>
+                                </div>
+                                <div class="calc-result highlight">
+                                    <span>Net ROI per Investor:</span>
+                                    <span id="netRoi">0%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 7: Review -->
+                    <div class="wizard-step" data-step="7">
+                        <h2>Review & Export</h2>
+                        <div class="form-section">
+                            <p class="help-text">Review your business plan below. You can print it directly or save it as a PDF from your browser's print dialog.</p>
+                            <div class="action-buttons">
+                                <button id="print-btn" class="btn btn-primary btn-large">Print Business Plan</button>
+                                <button id="edit-mode-btn" class="btn btn-secondary">Continue Editing</button>
+                            </div>
+                            <div class="preview-notice">
+                                <p><strong>Preview mode:</strong> Click "Print Business Plan" to see the final formatted output. Your browser's print dialog will open where you can save as PDF or print directly.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation -->
+                <div class="wizard-nav">
+                    <button id="prev-btn" class="btn btn-secondary" disabled>Previous</button>
+                    <button id="next-btn" class="btn btn-primary">Next</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Print Preview Mode -->
+        <div id="preview-mode" class="mode-container" style="display: none;">
+            <div class="preview-header">
+                <button id="back-to-edit-btn" class="btn btn-secondary">Back to Editor</button>
+                <button id="print-preview-btn" class="btn btn-primary">Print</button>
+            </div>
+            <div id="print-content" class="print-preview">
+                <!-- Content will be generated here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate PWA Icons</title>
+</head>
+<body>
+    <h1>Generating Icons...</h1>
+    <canvas id="canvas192" width="192" height="192"></canvas>
+    <canvas id="canvas512" width="512" height="512"></canvas>
+    <div id="links"></div>
+
+    <script>
+        function generateIcon(canvasId, size) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+
+            // Background
+            ctx.fillStyle = '#2c3e50';
+            ctx.fillRect(0, 0, size, size);
+
+            // Decorative lines
+            ctx.fillStyle = '#3498db';
+            const lineHeight = size * 0.05;
+            const startY = size * 0.25;
+            const spacing = size * 0.15;
+
+            // Three lines representing a document
+            ctx.fillRect(size * 0.25, startY, size * 0.5, lineHeight);
+            ctx.fillRect(size * 0.25, startY + spacing, size * 0.375, lineHeight);
+            ctx.fillRect(size * 0.25, startY + spacing * 2, size * 0.4375, lineHeight);
+
+            // Text "BP"
+            ctx.fillStyle = '#ffffff';
+            ctx.font = `bold ${size * 0.35}px Arial, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('BP', size / 2, size * 0.68);
+
+            return canvas.toDataURL('image/png');
+        }
+
+        const icon192 = generateIcon('canvas192', 192);
+        const icon512 = generateIcon('canvas512', 512);
+
+        // Create download links
+        const linksDiv = document.getElementById('links');
+        linksDiv.innerHTML = `
+            <p><a href="${icon192}" download="icon-192.png">Download 192x192 Icon</a></p>
+            <p><a href="${icon512}" download="icon-512.png">Download 512x512 Icon</a></p>
+            <p>Right-click each link and "Save Link As..." to download the icons.</p>
+        `;
+    </script>
+</body>
+</html>

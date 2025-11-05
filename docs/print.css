@@ -1,0 +1,333 @@
+/* ===============================================
+   Business Plan Builder - Print Styles
+   Professional output for investors
+   =============================================== */
+
+@media print {
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    body {
+        background: white;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Hide all UI elements */
+    .app-header,
+    .progress-steps,
+    .wizard-nav,
+    .preview-header,
+    .action-buttons,
+    .preview-notice,
+    #editor-mode {
+        display: none !important;
+    }
+
+    /* Show only print content */
+    #preview-mode {
+        display: block !important;
+    }
+
+    .print-preview {
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+        box-shadow: none;
+    }
+
+    /* Page breaks */
+    .print-section {
+        page-break-after: auto;
+        page-break-inside: avoid;
+    }
+
+    .print-page-break {
+        page-break-before: always;
+    }
+
+    h1, h2, h3 {
+        page-break-after: avoid;
+    }
+
+    /* Typography */
+    body {
+        font-family: 'Georgia', 'Times New Roman', serif;
+        font-size: 11pt;
+        line-height: 1.6;
+        color: #000;
+    }
+
+    h1 {
+        font-size: 24pt;
+        margin-bottom: 0.5em;
+    }
+
+    h2 {
+        font-size: 18pt;
+        margin-top: 1.5em;
+        margin-bottom: 0.5em;
+        color: #2c3e50;
+    }
+
+    h3 {
+        font-size: 14pt;
+        margin-top: 1em;
+        margin-bottom: 0.5em;
+        color: #34495e;
+    }
+
+    p {
+        margin-bottom: 0.5em;
+    }
+
+    /* Cover Page */
+    .print-cover {
+        text-align: center;
+        padding: 3in 1in;
+        page-break-after: always;
+    }
+
+    .print-cover h1 {
+        font-size: 32pt;
+        margin-bottom: 2em;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+
+    .print-cover .company-name {
+        font-size: 28pt;
+        font-weight: bold;
+        margin: 2em 0;
+        color: #2c3e50;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+    }
+
+    .print-cover .cover-meta {
+        margin-top: 3em;
+        font-size: 12pt;
+        line-height: 2;
+    }
+
+    .print-cover .cover-meta-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5em;
+    }
+
+    .print-cover .cover-meta strong {
+        font-weight: 600;
+    }
+
+    /* Content Sections */
+    .print-content {
+        padding: 0.75in 1in;
+    }
+
+    .print-section {
+        margin-bottom: 2em;
+    }
+
+    .print-section h2 {
+        border-bottom: 2px solid #2c3e50;
+        padding-bottom: 0.25em;
+        margin-bottom: 1em;
+    }
+
+    /* Objectives */
+    .print-objective {
+        background: #f8f9fa;
+        padding: 1em;
+        margin-bottom: 1em;
+        border-left: 4px solid #3498db;
+    }
+
+    .print-financial-objective {
+        background: #e8f4f8;
+        padding: 1em;
+        margin-bottom: 1em;
+        border-left: 4px solid #27ae60;
+        font-weight: 600;
+    }
+
+    /* Lists */
+    .print-list {
+        margin-left: 1.5em;
+        margin-bottom: 1em;
+    }
+
+    .print-list li {
+        margin-bottom: 0.5em;
+        padding-left: 0.5em;
+    }
+
+    /* Goals Sections */
+    .print-goals-section {
+        margin-bottom: 1.5em;
+    }
+
+    .print-goals-section h3 {
+        color: #2c3e50;
+        font-weight: 600;
+    }
+
+    /* Phases */
+    .print-phase {
+        background: #f8f9fa;
+        border: 1px solid #ddd;
+        padding: 1em;
+        margin-bottom: 1em;
+        page-break-inside: avoid;
+    }
+
+    .print-phase h4 {
+        font-size: 12pt;
+        color: #2c3e50;
+        margin-bottom: 0.5em;
+        font-weight: 600;
+    }
+
+    /* Budget Tables */
+    .print-budget-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 1.5em;
+        page-break-inside: avoid;
+    }
+
+    .print-budget-table th,
+    .print-budget-table td {
+        padding: 0.5em;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .print-budget-table th {
+        background: #2c3e50;
+        color: white;
+        font-weight: 600;
+    }
+
+    .print-budget-table tr:last-child td {
+        border-bottom: 2px solid #2c3e50;
+    }
+
+    .print-budget-table .amount {
+        text-align: right;
+        font-family: 'Courier New', monospace;
+    }
+
+    /* Financial Summary Box */
+    .print-financial-summary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5em;
+        margin: 1.5em 0;
+        page-break-inside: avoid;
+    }
+
+    .print-financial-summary h3 {
+        color: white;
+        margin-top: 0;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+        padding-bottom: 0.5em;
+    }
+
+    .print-financial-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5em 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .print-financial-row:last-child {
+        border-bottom: none;
+    }
+
+    .print-financial-row.highlight {
+        font-weight: 700;
+        font-size: 12pt;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 0.75em;
+        margin: 0.5em -0.5em;
+    }
+
+    .print-financial-row .label {
+        font-weight: 500;
+    }
+
+    .print-financial-row .value {
+        font-weight: 700;
+        font-family: 'Courier New', monospace;
+    }
+
+    /* Property Details Grid */
+    .print-property-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1em;
+        margin-bottom: 1em;
+    }
+
+    .print-property-item {
+        background: #f8f9fa;
+        padding: 0.75em;
+        border-left: 3px solid #3498db;
+    }
+
+    .print-property-item strong {
+        display: block;
+        color: #2c3e50;
+        margin-bottom: 0.25em;
+        font-size: 10pt;
+    }
+
+    /* Footer for pages */
+    @page {
+        margin: 0.75in;
+    }
+
+    /* Ensure proper spacing */
+    .print-subsection {
+        margin-bottom: 1em;
+    }
+
+    /* Timeline formatting */
+    .print-timeline {
+        margin-left: 2em;
+        border-left: 3px solid #3498db;
+        padding-left: 1em;
+    }
+
+    .print-timeline-item {
+        margin-bottom: 1em;
+        position: relative;
+    }
+
+    .print-timeline-item::before {
+        content: '●';
+        position: absolute;
+        left: -1.5em;
+        color: #3498db;
+        font-size: 14pt;
+    }
+
+    /* Risk mitigation highlighting */
+    .print-risk-item {
+        background: #fff3cd;
+        padding: 0.5em;
+        margin-bottom: 0.5em;
+        border-left: 3px solid #f39c12;
+    }
+
+    /* Market differentiation */
+    .print-differentiation-item {
+        background: #d4edda;
+        padding: 0.5em;
+        margin-bottom: 0.5em;
+        border-left: 3px solid #27ae60;
+    }
+}
