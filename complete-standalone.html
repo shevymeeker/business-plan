@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Business Plan Builder - Complete Standalone</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Tinos:wght@400;700&display=swap" rel="stylesheet">
     <style>
     /* Embed styles.css */
 /* ===============================================
@@ -617,29 +621,97 @@ label {
 
         body {
             background: white;
+            font-family: 'Lato', sans-serif !important;
+            font-size: 11pt;
+            line-height: 1.6;
+            color: #000;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Tinos', serif !important;
+            page-break-after: avoid;
+        }
+
+        p, li, td, span, div {
+            font-family: 'Lato', sans-serif !important;
         }
 
         .print-cover {
             text-align: center;
-            padding: 3in 1in;
+            padding: 2in 1in;
             page-break-after: always;
         }
 
         .print-cover h1 {
+            font-family: 'Tinos', serif !important;
             font-size: 32pt;
-            margin-bottom: 2em;
-        }
-
-        .print-cover .company-name {
-            font-size: 28pt;
-            font-weight: bold;
-            margin: 2em 0;
+            margin-bottom: 1em;
             color: #2c3e50;
         }
 
+        .print-cover .company-name {
+            font-family: 'Tinos', serif !important;
+            font-size: 28pt;
+            font-weight: bold;
+            margin: 1.5em 0;
+            color: #2c3e50;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .print-cover-image {
+            max-width: 500px;
+            max-height: 350px;
+            margin: 2em auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .print-cover-meta {
+            margin-top: 3em;
+            font-family: 'Lato', sans-serif !important;
+            font-size: 12pt;
+            line-height: 2;
+        }
+
+        .print-section {
+            page-break-inside: avoid;
+        }
+
         .print-section h2 {
-            border-bottom: 2px solid #2c3e50;
+            font-family: 'Tinos', serif !important;
+            font-size: 20pt;
+            border-bottom: 3px solid #2c3e50;
             padding-bottom: 0.25em;
+            margin-bottom: 1em;
+            color: #2c3e50;
+        }
+
+        .print-section h3 {
+            font-family: 'Tinos', serif !important;
+            font-size: 16pt;
+            margin-top: 1.5em;
+            margin-bottom: 0.75em;
+            color: #34495e;
+        }
+
+        .print-page-break {
+            page-break-before: always;
+        }
+
+        .print-list {
+            font-family: 'Lato', sans-serif !important;
+            margin-left: 1.5em;
+            margin-bottom: 1em;
+        }
+
+        .print-list li {
+            margin-bottom: 0.5em;
+            padding-left: 0.5em;
+        }
+
+        @page {
+            margin: 0.75in;
         }
     }
     </style>
@@ -727,6 +799,14 @@ label {
                             <div class="form-group">
                                 <label for="companyName">Company Name</label>
                                 <input type="text" id="companyName" class="form-input" placeholder="e.g., PAR 4 HOMES">
+                            </div>
+                            <div class="form-group">
+                                <label for="coverImage">Cover Image (Optional)</label>
+                                <p class="help-text">Upload a photo of a house in similar style or a mockup image for the cover page.</p>
+                                <input type="file" id="coverImage" class="form-input" accept="image/*">
+                                <div id="imagePreview" style="margin-top: 1rem; display: none;">
+                                    <img id="previewImg" style="max-width: 300px; max-height: 200px; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1045,6 +1125,23 @@ class BusinessPlanBuilder {
         // Set default date to today
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('proposalDate').value = today;
+
+        // Image upload handler
+        document.getElementById('coverImage').addEventListener('change', (e) => this.handleImageUpload(e));
+    }
+
+    handleImageUpload(event) {
+        const file = event.target.files[0];
+        if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                this.coverImageData = e.target.result;
+                document.getElementById('previewImg').src = e.target.result;
+                document.getElementById('imagePreview').style.display = 'block';
+                this.handleInputChange();
+            };
+            reader.readAsDataURL(file);
+        }
     }
 
     setupAutoSave() {
@@ -1181,6 +1278,9 @@ class BusinessPlanBuilder {
             maintenanceExpenses: document.getElementById('maintenanceExpenses').value,
             projectYears: document.getElementById('projectYears').value,
 
+            // Cover Image
+            coverImage: this.coverImageData || '',
+
             // Metadata
             lastSaved: new Date().toISOString()
         };
@@ -1211,6 +1311,13 @@ class BusinessPlanBuilder {
         if (this.data.phases && this.data.phases.length > 0) {
             this.phases = this.data.phases;
             this.renderPhases();
+        }
+
+        // Restore cover image
+        if (this.data.coverImage) {
+            this.coverImageData = this.data.coverImage;
+            document.getElementById('previewImg').src = this.data.coverImage;
+            document.getElementById('imagePreview').style.display = 'block';
         }
 
         this.updateCalculations();
@@ -1450,29 +1557,125 @@ class BusinessPlanBuilder {
         };
 
         printContent.innerHTML = `
-            <!-- Cover Page -->
+            <!-- Page 1: Cover Page -->
             <div class="print-cover print-section">
                 <h1>${data.projectTitle || 'Project Proposal'}</h1>
                 <div class="company-name">${data.companyName || 'COMPANY NAME'}</div>
-                <div class="cover-meta">
-                    <div class="cover-meta-row">
-                        <span><strong>Prepared for:</strong> ${data.preparedFor || ''}</span>
-                        <span><strong>Prepared by:</strong> ${data.preparedBy || ''}</span>
-                    </div>
-                    <div class="cover-meta-row">
-                        <span><strong>Date:</strong> ${this.formatDate(data.proposalDate)}</span>
-                        <span><strong>Proposal number:</strong> ${data.proposalNumber || ''}</span>
-                    </div>
+                ${this.coverImageData ? `<img src="${this.coverImageData}" class="print-cover-image" alt="Cover image" />` : ''}
+                <div class="print-cover-meta">
+                    <p><strong>Prepared for:</strong> ${data.preparedFor || ''}</p>
+                    <p><strong>Prepared by:</strong> ${data.preparedBy || ''}</p>
+                    <p><strong>Proposal number:</strong> ${data.proposalNumber || ''}</p>
                 </div>
             </div>
 
-            <!-- Main Content -->
-            <div class="print-content">
-                ${this.generateObjectiveSection(data)}
-                ${this.generateGoalsSection(data)}
-                ${this.generateSolutionSection(data)}
-                ${this.generateProjectOutlineSection(data)}
+            <!-- Page 2: Objective & Goals -->
+            <div class="print-page-break">
+                ${this.generatePage2(data)}
+            </div>
+
+            <!-- Page 3: Solution, Components, Timeline -->
+            <div class="print-page-break">
+                ${this.generatePage3(data)}
+            </div>
+
+            <!-- Page 4: Risk, Market, Outline -->
+            <div class="print-page-break">
+                ${this.generatePage4(data)}
+            </div>
+
+            <!-- Page 5: Budget -->
+            <div class="print-page-break">
                 ${this.generateBudgetSection(data, calcs)}
+            </div>
+        `;
+    }
+
+    // Page 2: Objective & Goals
+    generatePage2(data) {
+        return `
+            <div class="print-section">
+                <h2>Objective</h2>
+                ${data.objective ? `<p>${this.nl2br(data.objective)}</p>` : '<p>No objective specified.</p>'}
+                ${data.financialObjective ? `<p><strong>Financial Objective:</strong> ${this.nl2br(data.financialObjective)}</p>` : ''}
+            </div>
+
+            <div class="print-section" style="margin-top: 2em;">
+                <h2>Goals</h2>
+                ${data.shortTermGoals ? `
+                    <h3>Short-term goals (1-2 years)</h3>
+                    <ul class="print-list">
+                        ${this.textToList(data.shortTermGoals)}
+                    </ul>
+                ` : ''}
+                ${data.mediumTermGoals ? `
+                    <h3>Medium-term goals (Years 2-3)</h3>
+                    <ul class="print-list">
+                        ${this.textToList(data.mediumTermGoals)}
+                    </ul>
+                ` : ''}
+                ${data.longTermGoals ? `
+                    <h3>Long-term goals (Years 3-5)</h3>
+                    <ul class="print-list">
+                        ${this.textToList(data.longTermGoals)}
+                    </ul>
+                ` : ''}
+            </div>
+        `;
+    }
+
+    // Page 3: Solution, Components, Timeline
+    generatePage3(data) {
+        return `
+            <div class="print-section">
+                <h2>Solution</h2>
+                ${data.developmentStrategy ? `
+                    <h3>Development Strategy</h3>
+                    <p>${this.nl2br(data.developmentStrategy)}</p>
+                ` : ''}
+
+                ${data.phases && data.phases.length > 0 ? `
+                    <h3>Phased Development</h3>
+                    ${data.phases.map(phase => `
+                        <div style="margin-bottom: 1.5em;">
+                            <h4 style="font-family: 'Tinos', serif; font-size: 14pt; margin-bottom: 0.5em;">${phase.title}${phase.lots ? ': ' + phase.lots : ''}</h4>
+                            ${phase.description ? `<p>${this.nl2br(phase.description)}</p>` : ''}
+                            ${phase.timeline ? `<p><strong>Timeline:</strong> ${phase.timeline}</p>` : ''}
+                        </div>
+                    `).join('')}
+                ` : ''}
+            </div>
+        `;
+    }
+
+    // Page 4: Risk, Market, Outline
+    generatePage4(data) {
+        return `
+            ${data.riskMitigation ? `
+                <div class="print-section">
+                    <h2>Risk Mitigation</h2>
+                    <ul class="print-list">
+                        ${this.textToList(data.riskMitigation)}
+                    </ul>
+                </div>
+            ` : ''}
+
+            ${data.marketDifferentiation ? `
+                <div class="print-section" style="margin-top: 2em;">
+                    <h2>Market Differentiation</h2>
+                    <ul class="print-list">
+                        ${this.textToList(data.marketDifferentiation)}
+                    </ul>
+                </div>
+            ` : ''}
+
+            <div class="print-section" style="margin-top: 2em;">
+                <h2>Project Outline</h2>
+                ${data.propertyLocation ? `<p><strong>Location:</strong> ${data.propertyLocation}</p>` : ''}
+                ${data.propertySize ? `<p><strong>Size:</strong> ${data.propertySize} acres</p>` : ''}
+                ${data.totalLots ? `<p><strong>Buildable Lots:</strong> ${data.totalLots} total</p>` : ''}
+                ${data.currentStatus ? `<p><strong>Current Status:</strong> ${data.currentStatus}</p>` : ''}
+                ${data.acquisitionCost ? `<p><strong>Acquisition Cost:</strong> ${this.formatCurrency(parseFloat(data.acquisitionCost))}</p>` : ''}
             </div>
         `;
     }
