@@ -929,6 +929,112 @@ function hideInstallPrompt() {
     }
 }
 
+// iOS Install Prompt (for Safari)
+function isIOS() {
+    return /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream;
+}
+
+function isInStandaloneMode() {
+    return ('standalone' in window.navigator) && (window.navigator.standalone);
+}
+
+function hasIOSInstallBannerBeenDismissed() {
+    return localStorage.getItem('iosInstallBannerDismissed') === 'true';
+}
+
+function showIOSInstallPrompt() {
+    // Don't show if already dismissed or already installed
+    if (hasIOSInstallBannerBeenDismissed() || isInStandaloneMode()) {
+        return;
+    }
+
+    const installBanner = document.createElement('div');
+    installBanner.id = 'ios-install-banner';
+    installBanner.className = 'install-banner';
+    installBanner.innerHTML = `
+        <div class="install-content">
+            <span>📱 Install this app - Tap Share ⎙, then "Add to Home Screen"</span>
+            <div class="install-actions">
+                <button id="ios-show-guide" class="btn btn-primary btn-small">Show Me How</button>
+                <button id="ios-dismiss-install" class="btn btn-text btn-small">Later</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(installBanner);
+
+    document.getElementById('ios-show-guide').addEventListener('click', () => {
+        showIOSInstallGuide();
+    });
+
+    document.getElementById('ios-dismiss-install').addEventListener('click', () => {
+        localStorage.setItem('iosInstallBannerDismissed', 'true');
+        hideIOSInstallPrompt();
+    });
+}
+
+function hideIOSInstallPrompt() {
+    const banner = document.getElementById('ios-install-banner');
+    if (banner) {
+        banner.remove();
+    }
+}
+
+function showIOSInstallGuide() {
+    const modal = document.createElement('div');
+    modal.id = 'ios-install-modal';
+    modal.className = 'ios-install-modal';
+    modal.innerHTML = `
+        <div class="ios-install-content">
+            <h3>📱 How to Install on iPhone</h3>
+            <ul class="ios-install-steps">
+                <li>
+                    <strong>Step 1:</strong>
+                    Tap the Share button <strong>⎙</strong> at the bottom of Safari
+                </li>
+                <li>
+                    <strong>Step 2:</strong>
+                    Scroll down and tap <strong>"Add to Home Screen"</strong>
+                </li>
+                <li>
+                    <strong>Step 3:</strong>
+                    Tap <strong>"Add"</strong> in the top right corner
+                </li>
+            </ul>
+            <div class="ios-install-benefits">
+                <p><strong>✓</strong> App icon on your home screen</p>
+                <p><strong>✓</strong> Works completely offline</p>
+                <p><strong>✓</strong> Faster access - like a native app</p>
+            </div>
+            <div class="ios-install-actions">
+                <button id="ios-guide-close" class="btn btn-primary">Got It</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    // Close modal on button click
+    document.getElementById('ios-guide-close').addEventListener('click', () => {
+        modal.remove();
+        hideIOSInstallPrompt();
+        localStorage.setItem('iosInstallBannerDismissed', 'true');
+    });
+
+    // Close modal on backdrop click
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+}
+
+// Check for iOS and show install prompt on page load
+if (isIOS()) {
+    // Wait a bit before showing to avoid overwhelming user
+    setTimeout(() => {
+        showIOSInstallPrompt();
+    }, 2000);
+}
+
 function showUpdateNotification() {
     const updateBanner = document.createElement('div');
     updateBanner.id = 'update-banner';
