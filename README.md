@@ -14,9 +14,24 @@ A professional, offline-first business plan builder designed specifically for ge
 
 ## Getting Started
 
+### Quick Access (Recommended)
+
+**🌐 Use the live version:** [https://shevymeeker.github.io/business-plan/](https://shevymeeker.github.io/business-plan/)
+
+- Works immediately - no installation needed
+- Full offline support after first visit
+- Can be installed as a desktop/mobile app
+- Perfect for contractors who want instant access
+
 ### Installation
 
-1. **Option A: Web Server** (Recommended for full PWA features)
+1. **Option A: GitHub Pages** (Recommended - Already deployed!)
+   - Visit the live version above
+   - Click "Install" when prompted to add to your device
+   - Use completely offline after first visit!
+   - See [GITHUB_PAGES_SETUP.md](GITHUB_PAGES_SETUP.md) for deployment instructions
+
+2. **Option B: Local Web Server** (For development)
    ```bash
    # Using Python (if you have it installed)
    python -m http.server 8000
@@ -26,7 +41,7 @@ A professional, offline-first business plan builder designed specifically for ge
    ```
    Then open http://localhost:8000 in your browser
 
-2. **Option B: Direct File Access**
+3. **Option C: Direct File Access**
    - Simply open `index.html` in your web browser
    - Note: Service worker may not work with file:// protocol
 
