@@ -40,9 +40,11 @@ class BusinessPlanBuilder {
 
         // Export/Import
         document.getElementById('export-btn').addEventListener('click', () => this.exportData());
+        document.getElementById('copy-json-btn').addEventListener('click', () => this.copyJsonData());
         document.getElementById('import-btn').addEventListener('click', () => {
             document.getElementById('import-file').click();
         });
+        document.getElementById('paste-json-btn').addEventListener('click', () => this.pasteJsonData());
         document.getElementById('import-file').addEventListener('change', (e) => this.importData(e));
 
         // Phase management
@@ -242,20 +244,48 @@ class BusinessPlanBuilder {
         this.updateCalculations();
     }
 
-    exportData() {
+    async exportData() {
         const dataStr = JSON.stringify(this.data, null, 2);
+        const filename = `business-plan-${new Date().toISOString().split('T')[0]}.json`;
         const blob = new Blob([dataStr], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
 
+        // Try Web Share API first (works great on iOS!)
+        if (navigator.share && navigator.canShare) {
+            try {
+                const file = new File([blob], filename, { type: 'application/json' });
+                const shareData = {
+                    files: [file],
+                    title: 'Business Plan Export',
+                    text: 'Save this business plan file to your Files app'
+                };
+
+                if (navigator.canShare(shareData)) {
+                    await navigator.share(shareData);
+                    console.log('File shared successfully');
+                    return;
+                }
+            } catch (err) {
+                // User cancelled or share failed, fall through to other methods
+                console.log('Share failed or cancelled:', err);
+            }
+        }
+
+        // Fallback: Traditional download (for desktop browsers)
+        const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `business-plan-${new Date().toISOString().split('T')[0]}.json`;
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
 
-        alert('Data exported successfully! You can import this file on another device.');
+        // Show instructions based on platform
+        if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+            alert('File downloaded!\n\nTo find it:\n1. Open the Files app\n2. Go to Browse → Downloads\n3. Long-press the file to rename it');
+        } else {
+            alert('Data exported successfully! You can import this file later or on another device.');
+        }
     }
 
     importData(event) {
@@ -276,6 +306,48 @@ class BusinessPlanBuilder {
             }
         };
         reader.readAsText(file);
+    }
+
+    async copyJsonData() {
+        const dataStr = JSON.stringify(this.data, null, 2);
+
+        try {
+            await navigator.clipboard.writeText(dataStr);
+            alert('✓ Data copied to clipboard!\n\nYou can now:\n• Paste into Notes app\n• Paste into Messages\n• Paste into any text editor\n\nTo restore: Use "Paste Data" button');
+        } catch (err) {
+            // Fallback for older browsers
+            const textarea = document.createElement('textarea');
+            textarea.value = dataStr;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                alert('✓ Data copied to clipboard!');
+            } catch (e) {
+                alert('Failed to copy. Please use Export/Share instead.');
+            }
+            document.body.removeChild(textarea);
+        }
+    }
+
+    async pasteJsonData() {
+        try {
+            const text = await navigator.clipboard.readText();
+            const data = JSON.parse(text);
+            this.data = data;
+            localStorage.setItem('businessPlanData', JSON.stringify(data));
+            this.populateForm();
+            alert('✓ Data restored successfully from clipboard!');
+        } catch (error) {
+            if (error.name === 'NotAllowedError') {
+                alert('Clipboard access denied.\n\nPlease:\n1. Copy your saved JSON text\n2. Or use "Import File" button instead');
+            } else {
+                alert('Error: Invalid data in clipboard.\n\nMake sure you copied data from "Copy Data" button.');
+            }
+            console.error(error);
+        }
     }
 
     // ===============================================
@@ -786,7 +858,7 @@ let updateAvailable = false;
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./service-worker.js')
+        navigator.serviceWorker.register('/business-plan/service-worker.js')
             .then(registration => {
                 console.log('ServiceWorker registered:', registration);
 
