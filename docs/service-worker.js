@@ -3,14 +3,15 @@
 
 const CACHE_NAME = 'business-plan-builder-v1';
 const urlsToCache = [
-  './',
-  './index.html',
-  './styles.css',
-  './print.css',
-  './app.js',
-  './manifest.json',
-  './icon-192.png',
-  './icon-512.png'
+  '/business-plan/',
+  '/business-plan/index.html',
+  '/business-plan/styles.css',
+  '/business-plan/print.css',
+  '/business-plan/app.js',
+  '/business-plan/manifest.json',
+  '/business-plan/icon-180.png',
+  '/business-plan/icon-192.png',
+  '/business-plan/icon-512.png'
 ];
 
 // Install event - cache all static assets
