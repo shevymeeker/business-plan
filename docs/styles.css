@@ -702,6 +702,105 @@ label {
     gap: 1rem;
 }
 
+/* iOS Install Instructions Modal */
+.ios-install-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10001;
+    padding: 1rem;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.ios-install-content {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 500px;
+    width: 100%;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    animation: slideUpModal 0.3s ease-out;
+}
+
+@keyframes slideUpModal {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.ios-install-content h3 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.ios-install-steps {
+    list-style: none;
+    padding: 0;
+    margin: 1.5rem 0;
+}
+
+.ios-install-steps li {
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    background: var(--light-bg);
+    border-radius: 8px;
+    border-left: 4px solid var(--secondary-color);
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.ios-install-steps li strong {
+    color: var(--primary-color);
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.ios-install-benefits {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1rem;
+    border-radius: 8px;
+    margin: 1.5rem 0;
+}
+
+.ios-install-benefits p {
+    margin: 0.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.ios-install-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+}
+
 /* Responsive PWA Elements */
 @media (max-width: 768px) {
     .install-content {
@@ -723,5 +822,18 @@ label {
     .online-status {
         font-size: 0.75rem;
         padding: 0.3rem 0.6rem;
+    }
+
+    .ios-install-content {
+        padding: 1.5rem;
+    }
+
+    .ios-install-content h3 {
+        font-size: 1.25rem;
+    }
+
+    .ios-install-steps li {
+        font-size: 0.95rem;
+        padding: 0.75rem;
     }
 }
