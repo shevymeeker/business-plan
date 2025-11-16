@@ -7,7 +7,7 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Tinos:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Crimson+Text:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
     /* Embed styles.css */
 /* ===============================================
@@ -628,12 +628,12 @@ label {
         }
 
         h1, h2, h3, h4, h5, h6 {
-            font-family: 'Tinos', serif !important;
+            font-family: 'FF Tisa', 'Crimson Text', 'Georgia', serif !important;
             page-break-after: avoid;
         }
 
         p, li, td, span, div {
-            font-family: 'Lato', sans-serif !important;
+            font-family: 'Lato', 'Helvetica Neue', 'Arial', sans-serif !important;
         }
 
         .print-cover {
@@ -643,14 +643,14 @@ label {
         }
 
         .print-cover h1 {
-            font-family: 'Tinos', serif !important;
+            font-family: 'FF Tisa', 'Crimson Text', 'Georgia', serif !important;
             font-size: 32pt;
             margin-bottom: 1em;
             color: #2c3e50;
         }
 
         .print-cover .company-name {
-            font-family: 'Tinos', serif !important;
+            font-family: 'FF Tisa', 'Crimson Text', 'Georgia', serif !important;
             font-size: 28pt;
             font-weight: bold;
             margin: 1.5em 0;
@@ -679,7 +679,7 @@ label {
         }
 
         .print-section h2 {
-            font-family: 'Tinos', serif !important;
+            font-family: 'FF Tisa', 'Crimson Text', 'Georgia', serif !important;
             font-size: 20pt;
             border-bottom: 3px solid #2c3e50;
             padding-bottom: 0.25em;
@@ -688,7 +688,7 @@ label {
         }
 
         .print-section h3 {
-            font-family: 'Tinos', serif !important;
+            font-family: 'FF Tisa', 'Crimson Text', 'Georgia', serif !important;
             font-size: 16pt;
             margin-top: 1.5em;
             margin-bottom: 0.75em;
@@ -708,6 +708,59 @@ label {
         .print-list li {
             margin-bottom: 0.5em;
             padding-left: 0.5em;
+        }
+
+        .print-budget-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1em 0;
+            font-family: 'Lato', sans-serif !important;
+        }
+
+        .print-budget-table th,
+        .print-budget-table td {
+            padding: 0.75em;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .print-budget-table th {
+            background-color: #f8f9fa;
+            font-family: 'FF Tisa', 'Crimson Text', 'Georgia', serif !important;
+            font-weight: 600;
+        }
+
+        .print-budget-table .amount {
+            text-align: right;
+            font-family: 'Lato', sans-serif !important;
+        }
+
+        .print-financial-summary {
+            margin: 2em 0;
+            font-family: 'Lato', sans-serif !important;
+        }
+
+        .print-financial-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5em 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .print-financial-row.highlight {
+            background-color: #f8f9fa;
+            padding: 0.75em;
+            margin: 0.5em 0;
+            font-weight: 600;
+        }
+
+        .print-financial-row .label {
+            font-family: 'Lato', sans-serif !important;
+        }
+
+        .print-financial-row .value {
+            font-family: 'Lato', sans-serif !important;
+            font-weight: 600;
         }
 
         @page {
@@ -1561,11 +1614,13 @@ class BusinessPlanBuilder {
             <div class="print-cover print-section">
                 <h1>${data.projectTitle || 'Project Proposal'}</h1>
                 <div class="company-name">${data.companyName || 'COMPANY NAME'}</div>
-                ${this.coverImageData ? `<img src="${this.coverImageData}" class="print-cover-image" alt="Cover image" />` : ''}
+                ${this.coverImageData ? `<img src="${this.coverImageData}" class="print-cover-image" alt="Cover image" />` : `<div style="border: 2px dashed #bdc3c7; padding: 4em 2em; margin: 2em auto; max-width: 500px; text-align: center; color: #7f8c8d; font-family: 'Lato', sans-serif; font-size: 14pt;">
+                    <p style="margin: 0;">📷 Add a photo of a house with similar style</p>
+                    <p style="margin-top: 0.5em; font-size: 11pt; font-style: italic;">Upload in the Cover Page section</p>
+                </div>`}
                 <div class="print-cover-meta">
-                    <p><strong>Prepared for:</strong> ${data.preparedFor || ''}</p>
-                    <p><strong>Prepared by:</strong> ${data.preparedBy || ''}</p>
-                    <p><strong>Proposal number:</strong> ${data.proposalNumber || ''}</p>
+                    <p><strong>Prepared for:</strong> ${data.preparedFor || '_____________________'}</p>
+                    <p><strong>Prepared by:</strong> ${data.preparedBy || '_____________________'}</p>
                 </div>
             </div>
 
@@ -1630,47 +1685,56 @@ class BusinessPlanBuilder {
             <div class="print-section">
                 <h2>Solution</h2>
                 ${data.developmentStrategy ? `
-                    <h3>Development Strategy</h3>
                     <p>${this.nl2br(data.developmentStrategy)}</p>
-                ` : ''}
+                ` : '<p>No development strategy specified.</p>'}
+            </div>
 
-                ${data.phases && data.phases.length > 0 ? `
-                    <h3>Phased Development</h3>
+            ${data.phases && data.phases.length > 0 ? `
+                <div class="print-section" style="margin-top: 2em;">
+                    <h2>Components</h2>
                     ${data.phases.map(phase => `
                         <div style="margin-bottom: 1.5em;">
-                            <h4 style="font-family: 'Tinos', serif; font-size: 14pt; margin-bottom: 0.5em;">${phase.title}${phase.lots ? ': ' + phase.lots : ''}</h4>
+                            <h3 style="font-family: 'FF Tisa', 'Crimson Text', 'Georgia', serif; font-size: 14pt; margin-bottom: 0.5em;">${phase.title}${phase.lots ? ': ' + phase.lots : ''}</h3>
                             ${phase.description ? `<p>${this.nl2br(phase.description)}</p>` : ''}
-                            ${phase.timeline ? `<p><strong>Timeline:</strong> ${phase.timeline}</p>` : ''}
                         </div>
                     `).join('')}
-                ` : ''}
-            </div>
+                </div>
+
+                <div class="print-section" style="margin-top: 2em;">
+                    <h2>Timeline</h2>
+                    ${data.phases.map(phase => `
+                        <div style="margin-bottom: 1em;">
+                            <p><strong>${phase.title}:</strong> ${phase.timeline || 'Timeline not specified'}</p>
+                        </div>
+                    `).join('')}
+                </div>
+            ` : ''}
         `;
     }
 
     // Page 4: Risk, Market, Outline
     generatePage4(data) {
         return `
-            ${data.riskMitigation ? `
-                <div class="print-section">
-                    <h2>Risk Mitigation</h2>
+            <div class="print-section">
+                <h2>Risk</h2>
+                ${data.riskMitigation ? `
                     <ul class="print-list">
                         ${this.textToList(data.riskMitigation)}
                     </ul>
-                </div>
-            ` : ''}
+                ` : '<p>No risk mitigation strategies specified.</p>'}
+            </div>
 
-            ${data.marketDifferentiation ? `
-                <div class="print-section" style="margin-top: 2em;">
-                    <h2>Market Differentiation</h2>
+            <div class="print-section" style="margin-top: 2em;">
+                <h2>Market</h2>
+                ${data.marketDifferentiation ? `
                     <ul class="print-list">
                         ${this.textToList(data.marketDifferentiation)}
                     </ul>
-                </div>
-            ` : ''}
+                ` : '<p>No market differentiation specified.</p>'}
+            </div>
 
             <div class="print-section" style="margin-top: 2em;">
-                <h2>Project Outline</h2>
+                <h2>Outline</h2>
                 ${data.propertyLocation ? `<p><strong>Location:</strong> ${data.propertyLocation}</p>` : ''}
                 ${data.propertySize ? `<p><strong>Size:</strong> ${data.propertySize} acres</p>` : ''}
                 ${data.totalLots ? `<p><strong>Buildable Lots:</strong> ${data.totalLots} total</p>` : ''}
