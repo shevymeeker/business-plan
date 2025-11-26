@@ -11,9 +11,8 @@ const urlsToCache = [
   './print.css',
   './app.js',
   './manifest.json',
-  // Ensure these icon files actually exist in the folder!
-  './icon-192.png', 
-  './icon-512.png'
+  './icon-192.svg' // Changed from .png
+
 ];
 
 // Install event - cache all static assets
