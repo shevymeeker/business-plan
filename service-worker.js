@@ -1,33 +1,28 @@
 // Business Plan Builder - Service Worker
 // Enables offline functionality
-// FIXED: Relative paths & comprehensive caching
 
-const CACHE_NAME = 'bp-builder-v2'; // Bump version to force update
-
+const CACHE_NAME = 'business-plan-builder-v1';
 const urlsToCache = [
-  './',
+  './',            // Refers to the current directory (index.html)
   './index.html',
   './styles.css',
   './print.css',
   './app.js',
-  './manifest.json',
-  './icon-192.svg' // Changed from .png
-
+  './manifest.json', // Good practice to cache the manifest too
+  './icon-192.png',  // Don't forget to cache your icons!
+  './icon-512.png'
 ];
 
 // Install event - cache all static assets
 self.addEventListener('install', event => {
-  console.log('[Service Worker] Installing & Caching App...');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
+        console.log('Opened cache');
         return cache.addAll(urlsToCache);
       })
-      .then(() => self.skipWaiting()) // Activate immediately
-      .catch(err => {
-        console.error('[Service Worker] Cache failed! Check if all files exist:', err);
-      })
   );
+  self.skipWaiting();
 });
 
 // Fetch event - serve from cache when offline
@@ -39,24 +34,45 @@ self.addEventListener('fetch', event => {
         if (response) {
           return response;
         }
-        // Network fallback
-        return fetch(event.request);
+
+        // Clone the request
+        const fetchRequest = event.request.clone();
+
+        return fetch(fetchRequest).then(response => {
+          // Check if valid response
+          if (!response || response.status !== 200 || response.type !== 'basic') {
+            return response;
+          }
+
+          // Clone the response
+          const responseToCache = response.clone();
+
+          caches.open(CACHE_NAME)
+            .then(cache => {
+              cache.put(event.request, responseToCache);
+            });
+
+          return response;
+        });
       })
   );
 });
 
 // Activate event - clean up old caches
 self.addEventListener('activate', event => {
+  const cacheWhitelist = [CACHE_NAME];
+
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('[Service Worker] Removing old cache:', cacheName);
+          if (cacheWhitelist.indexOf(cacheName) === -1) {
             return caches.delete(cacheName);
           }
         })
       );
-    }).then(() => self.clients.claim())
+    })
   );
+
+  self.clients.claim();
 });
