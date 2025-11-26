@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PWA Test</title>
+</head>
+<body>
+    <h1>Testing PWA Components</h1>
+    <div id="results"></div>
+    <script>
+        const results = [];
+        
+        // Test 1: LocalStorage
+        try {
+            localStorage.setItem('test', 'works');
+            results.push('✓ LocalStorage: OK');
+        } catch(e) {
+            results.push('✗ LocalStorage: ' + e.message);
+        }
+        
+        // Test 2: Service Worker Support
+        if ('serviceWorker' in navigator) {
+            results.push('✓ Service Worker: Supported');
+        } else {
+            results.push('✗ Service Worker: Not supported');
+        }
+        
+        // Test 3: Manifest exists
+        fetch('./manifest.json')
+            .then(r => r.json())
+            .then(m => {
+                results.push('✓ Manifest: Loaded (' + m.name + ')');
+                document.getElementById('results').innerHTML = results.join('<br>');
+            })
+            .catch(e => {
+                results.push('✗ Manifest: ' + e.message);
+                document.getElementById('results').innerHTML = results.join('<br>');
+            });
+            
+        setTimeout(() => {
+            document.getElementById('results').innerHTML = results.join('<br>');
+        }, 100);
+    </script>
+</body>
+</html>
