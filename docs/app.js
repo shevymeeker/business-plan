@@ -40,11 +40,9 @@ class BusinessPlanBuilder {
 
         // Export/Import
         document.getElementById('export-btn').addEventListener('click', () => this.exportData());
-        document.getElementById('copy-json-btn').addEventListener('click', () => this.copyJsonData());
         document.getElementById('import-btn').addEventListener('click', () => {
             document.getElementById('import-file').click();
         });
-        document.getElementById('paste-json-btn').addEventListener('click', () => this.pasteJsonData());
         document.getElementById('import-file').addEventListener('change', (e) => this.importData(e));
 
         // Phase management
@@ -244,48 +242,20 @@ class BusinessPlanBuilder {
         this.updateCalculations();
     }
 
-    async exportData() {
+    exportData() {
         const dataStr = JSON.stringify(this.data, null, 2);
-        const filename = `business-plan-${new Date().toISOString().split('T')[0]}.json`;
         const blob = new Blob([dataStr], { type: 'application/json' });
-
-        // Try Web Share API first (works great on iOS!)
-        if (navigator.share && navigator.canShare) {
-            try {
-                const file = new File([blob], filename, { type: 'application/json' });
-                const shareData = {
-                    files: [file],
-                    title: 'Business Plan Export',
-                    text: 'Save this business plan file to your Files app'
-                };
-
-                if (navigator.canShare(shareData)) {
-                    await navigator.share(shareData);
-                    console.log('File shared successfully');
-                    return;
-                }
-            } catch (err) {
-                // User cancelled or share failed, fall through to other methods
-                console.log('Share failed or cancelled:', err);
-            }
-        }
-
-        // Fallback: Traditional download (for desktop browsers)
         const url = URL.createObjectURL(blob);
+
         const a = document.createElement('a');
         a.href = url;
-        a.download = filename;
+        a.download = `business-plan-${new Date().toISOString().split('T')[0]}.json`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
 
-        // Show instructions based on platform
-        if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
-            alert('File downloaded!\n\nTo find it:\n1. Open the Files app\n2. Go to Browse → Downloads\n3. Long-press the file to rename it');
-        } else {
-            alert('Data exported successfully! You can import this file later or on another device.');
-        }
+        alert('Data exported successfully! You can import this file on another device.');
     }
 
     importData(event) {
@@ -306,48 +276,6 @@ class BusinessPlanBuilder {
             }
         };
         reader.readAsText(file);
-    }
-
-    async copyJsonData() {
-        const dataStr = JSON.stringify(this.data, null, 2);
-
-        try {
-            await navigator.clipboard.writeText(dataStr);
-            alert('✓ Data copied to clipboard!\n\nYou can now:\n• Paste into Notes app\n• Paste into Messages\n• Paste into any text editor\n\nTo restore: Use "Paste Data" button');
-        } catch (err) {
-            // Fallback for older browsers
-            const textarea = document.createElement('textarea');
-            textarea.value = dataStr;
-            textarea.style.position = 'fixed';
-            textarea.style.opacity = '0';
-            document.body.appendChild(textarea);
-            textarea.select();
-            try {
-                document.execCommand('copy');
-                alert('✓ Data copied to clipboard!');
-            } catch (e) {
-                alert('Failed to copy. Please use Export/Share instead.');
-            }
-            document.body.removeChild(textarea);
-        }
-    }
-
-    async pasteJsonData() {
-        try {
-            const text = await navigator.clipboard.readText();
-            const data = JSON.parse(text);
-            this.data = data;
-            localStorage.setItem('businessPlanData', JSON.stringify(data));
-            this.populateForm();
-            alert('✓ Data restored successfully from clipboard!');
-        } catch (error) {
-            if (error.name === 'NotAllowedError') {
-                alert('Clipboard access denied.\n\nPlease:\n1. Copy your saved JSON text\n2. Or use "Import File" button instead');
-            } else {
-                alert('Error: Invalid data in clipboard.\n\nMake sure you copied data from "Copy Data" button.');
-            }
-            console.error(error);
-        }
     }
 
     // ===============================================
@@ -853,25 +781,11 @@ class BusinessPlanBuilder {
 // Service Worker Registration (PWA)
 // ===============================================
 
-let deferredPrompt;
-let updateAvailable = false;
-
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/business-plan/service-worker.js')
+        navigator.serviceWorker.register('./service-worker.js')
             .then(registration => {
                 console.log('ServiceWorker registered:', registration);
-
-                // Check for updates
-                registration.addEventListener('updatefound', () => {
-                    const newWorker = registration.installing;
-                    newWorker.addEventListener('statechange', () => {
-                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            updateAvailable = true;
-                            showUpdateNotification();
-                        }
-                    });
-                });
             })
             .catch(err => {
                 console.log('ServiceWorker registration failed:', err);
@@ -879,208 +793,8 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// PWA Install Prompt
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    showInstallPrompt();
-});
-
-window.addEventListener('appinstalled', () => {
-    console.log('PWA installed successfully');
-    hideInstallPrompt();
-    deferredPrompt = null;
-});
-
-function showInstallPrompt() {
-    const installBanner = document.createElement('div');
-    installBanner.id = 'install-banner';
-    installBanner.className = 'install-banner';
-    installBanner.innerHTML = `
-        <div class="install-content">
-            <span>📱 Install this app for offline access</span>
-            <div class="install-actions">
-                <button id="install-btn" class="btn btn-primary btn-small">Install</button>
-                <button id="dismiss-install" class="btn btn-text btn-small">Later</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(installBanner);
-
-    document.getElementById('install-btn').addEventListener('click', async () => {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            console.log(`User response to install prompt: ${outcome}`);
-            deferredPrompt = null;
-            hideInstallPrompt();
-        }
-    });
-
-    document.getElementById('dismiss-install').addEventListener('click', () => {
-        hideInstallPrompt();
-    });
-}
-
-function hideInstallPrompt() {
-    const banner = document.getElementById('install-banner');
-    if (banner) {
-        banner.remove();
-    }
-}
-
-// iOS Install Prompt (for Safari)
-function isIOS() {
-    return /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream;
-}
-
-function isInStandaloneMode() {
-    return ('standalone' in window.navigator) && (window.navigator.standalone);
-}
-
-function hasIOSInstallBannerBeenDismissed() {
-    return localStorage.getItem('iosInstallBannerDismissed') === 'true';
-}
-
-function showIOSInstallPrompt() {
-    // Don't show if already dismissed or already installed
-    if (hasIOSInstallBannerBeenDismissed() || isInStandaloneMode()) {
-        return;
-    }
-
-    const installBanner = document.createElement('div');
-    installBanner.id = 'ios-install-banner';
-    installBanner.className = 'install-banner';
-    installBanner.innerHTML = `
-        <div class="install-content">
-            <span>📱 Install this app - Tap Share ⎙, then "Add to Home Screen"</span>
-            <div class="install-actions">
-                <button id="ios-show-guide" class="btn btn-primary btn-small">Show Me How</button>
-                <button id="ios-dismiss-install" class="btn btn-text btn-small">Later</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(installBanner);
-
-    document.getElementById('ios-show-guide').addEventListener('click', () => {
-        showIOSInstallGuide();
-    });
-
-    document.getElementById('ios-dismiss-install').addEventListener('click', () => {
-        localStorage.setItem('iosInstallBannerDismissed', 'true');
-        hideIOSInstallPrompt();
-    });
-}
-
-function hideIOSInstallPrompt() {
-    const banner = document.getElementById('ios-install-banner');
-    if (banner) {
-        banner.remove();
-    }
-}
-
-function showIOSInstallGuide() {
-    const modal = document.createElement('div');
-    modal.id = 'ios-install-modal';
-    modal.className = 'ios-install-modal';
-    modal.innerHTML = `
-        <div class="ios-install-content">
-            <h3>📱 How to Install on iPhone</h3>
-            <ul class="ios-install-steps">
-                <li>
-                    <strong>Step 1:</strong>
-                    Tap the Share button <strong>⎙</strong> at the bottom of Safari
-                </li>
-                <li>
-                    <strong>Step 2:</strong>
-                    Scroll down and tap <strong>"Add to Home Screen"</strong>
-                </li>
-                <li>
-                    <strong>Step 3:</strong>
-                    Tap <strong>"Add"</strong> in the top right corner
-                </li>
-            </ul>
-            <div class="ios-install-benefits">
-                <p><strong>✓</strong> App icon on your home screen</p>
-                <p><strong>✓</strong> Works completely offline</p>
-                <p><strong>✓</strong> Faster access - like a native app</p>
-            </div>
-            <div class="ios-install-actions">
-                <button id="ios-guide-close" class="btn btn-primary">Got It</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-
-    // Close modal on button click
-    document.getElementById('ios-guide-close').addEventListener('click', () => {
-        modal.remove();
-        hideIOSInstallPrompt();
-        localStorage.setItem('iosInstallBannerDismissed', 'true');
-    });
-
-    // Close modal on backdrop click
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.remove();
-        }
-    });
-}
-
-// Check for iOS and show install prompt on page load
-if (isIOS()) {
-    // Wait a bit before showing to avoid overwhelming user
-    setTimeout(() => {
-        showIOSInstallPrompt();
-    }, 2000);
-}
-
-function showUpdateNotification() {
-    const updateBanner = document.createElement('div');
-    updateBanner.id = 'update-banner';
-    updateBanner.className = 'update-banner';
-    updateBanner.innerHTML = `
-        <div class="update-content">
-            <span>🔄 New version available!</span>
-            <button id="update-btn" class="btn btn-primary btn-small">Update Now</button>
-        </div>
-    `;
-    document.body.appendChild(updateBanner);
-
-    document.getElementById('update-btn').addEventListener('click', () => {
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistration().then(registration => {
-                if (registration && registration.waiting) {
-                    registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-                }
-            });
-        }
-        window.location.reload();
-    });
-}
-
-// Online/Offline Status Indicator
-function updateOnlineStatus() {
-    const status = document.getElementById('online-status');
-    if (status) {
-        if (navigator.onLine) {
-            status.className = 'online-status online';
-            status.textContent = '🟢 Online';
-        } else {
-            status.className = 'online-status offline';
-            status.textContent = '🔴 Offline - Using cached version';
-        }
-    }
-}
-
-window.addEventListener('online', updateOnlineStatus);
-window.addEventListener('offline', updateOnlineStatus);
-
 // Initialize the app
 let app;
 document.addEventListener('DOMContentLoaded', () => {
     app = new BusinessPlanBuilder();
-
-    // Initialize online status
-    setTimeout(updateOnlineStatus, 100);
 });
