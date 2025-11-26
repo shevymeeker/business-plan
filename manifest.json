@@ -14,10 +14,7 @@
         "sizes": "192x192",
         "type": "image/svg+xml"
     }
-    // Remove the 512 entry or map it to the SVG too
-]
-   
-  ],
+
   "categories": ["business", "productivity", "finance"],
   "screenshots": []
 }
