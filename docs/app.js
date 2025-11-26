@@ -261,12 +261,10 @@ class BusinessPlanBuilder {
 
                 if (navigator.canShare(shareData)) {
                     await navigator.share(shareData);
-                    console.log('File shared successfully');
                     return;
                 }
             } catch (err) {
                 // User cancelled or share failed, fall through to other methods
-                console.log('Share failed or cancelled:', err);
             }
         }
 
@@ -550,16 +548,16 @@ class BusinessPlanBuilder {
         printContent.innerHTML = `
             <!-- Cover Page -->
             <div class="print-cover print-section">
-                <h1>${data.projectTitle || 'Project Proposal'}</h1>
-                <div class="company-name">${data.companyName || 'COMPANY NAME'}</div>
+                <h1>${this.escapeHtml(data.projectTitle || 'Project Proposal')}</h1>
+                <div class="company-name">${this.escapeHtml(data.companyName || 'COMPANY NAME')}</div>
                 <div class="cover-meta">
                     <div class="cover-meta-row">
-                        <span><strong>Prepared for:</strong> ${data.preparedFor || ''}</span>
-                        <span><strong>Prepared by:</strong> ${data.preparedBy || ''}</span>
+                        <span><strong>Prepared for:</strong> ${this.escapeHtml(data.preparedFor || '')}</span>
+                        <span><strong>Prepared by:</strong> ${this.escapeHtml(data.preparedBy || '')}</span>
                     </div>
                     <div class="cover-meta-row">
                         <span><strong>Date:</strong> ${this.formatDate(data.proposalDate)}</span>
-                        <span><strong>Proposal number:</strong> ${data.proposalNumber || ''}</span>
+                        <span><strong>Proposal number:</strong> ${this.escapeHtml(data.proposalNumber || '')}</span>
                     </div>
                 </div>
             </div>
@@ -640,9 +638,9 @@ class BusinessPlanBuilder {
                     <h3>Phased Development</h3>
                     ${data.phases.map(phase => `
                         <div class="print-phase">
-                            <h4>${phase.title}${phase.lots ? ': ' + phase.lots : ''}</h4>
+                            <h4>${this.escapeHtml(phase.title)}${phase.lots ? ': ' + this.escapeHtml(phase.lots) : ''}</h4>
                             ${phase.description ? `<p>${this.nl2br(phase.description)}</p>` : ''}
-                            ${phase.timeline ? `<p><strong>Timeline:</strong> ${phase.timeline}</p>` : ''}
+                            ${phase.timeline ? `<p><strong>Timeline:</strong> ${this.escapeHtml(phase.timeline)}</p>` : ''}
                         </div>
                     `).join('')}
                 ` : ''}
@@ -676,25 +674,25 @@ class BusinessPlanBuilder {
                     ${data.propertyLocation ? `
                         <div class="print-property-item">
                             <strong>Location</strong>
-                            ${data.propertyLocation}
+                            ${this.escapeHtml(data.propertyLocation)}
                         </div>
                     ` : ''}
                     ${data.propertySize ? `
                         <div class="print-property-item">
                             <strong>Size</strong>
-                            ${data.propertySize} acres
+                            ${this.escapeHtml(data.propertySize)} acres
                         </div>
                     ` : ''}
                     ${data.totalLots ? `
                         <div class="print-property-item">
                             <strong>Buildable Lots</strong>
-                            ${data.totalLots} total
+                            ${this.escapeHtml(data.totalLots)} total
                         </div>
                     ` : ''}
                     ${data.currentStatus ? `
                         <div class="print-property-item">
                             <strong>Current Status</strong>
-                            ${data.currentStatus}
+                            ${this.escapeHtml(data.currentStatus)}
                         </div>
                     ` : ''}
                     ${data.acquisitionCost ? `
@@ -860,8 +858,6 @@ if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/business-plan/service-worker.js')
             .then(registration => {
-                console.log('ServiceWorker registered:', registration);
-
                 // Check for updates
                 registration.addEventListener('updatefound', () => {
                     const newWorker = registration.installing;
@@ -873,8 +869,8 @@ if ('serviceWorker' in navigator) {
                     });
                 });
             })
-            .catch(err => {
-                console.log('ServiceWorker registration failed:', err);
+            .catch(() => {
+                // Service worker registration failed - app will still work without offline support
             });
     });
 }
@@ -887,7 +883,6 @@ window.addEventListener('beforeinstallprompt', (e) => {
 });
 
 window.addEventListener('appinstalled', () => {
-    console.log('PWA installed successfully');
     hideInstallPrompt();
     deferredPrompt = null;
 });
@@ -911,7 +906,6 @@ function showInstallPrompt() {
         if (deferredPrompt) {
             deferredPrompt.prompt();
             const { outcome } = await deferredPrompt.userChoice;
-            console.log(`User response to install prompt: ${outcome}`);
             deferredPrompt = null;
             hideInstallPrompt();
         }

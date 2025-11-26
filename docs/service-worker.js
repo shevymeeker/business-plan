@@ -1,7 +1,7 @@
 // Business Plan Builder - Service Worker
 // Enables offline functionality for contractors
 
-const CACHE_NAME = 'business-plan-builder-v1';
+const CACHE_NAME = 'business-plan-builder-v2';
 const urlsToCache = [
   '/business-plan/',
   '/business-plan/index.html',
@@ -16,18 +16,14 @@ const urlsToCache = [
 
 // Install event - cache all static assets
 self.addEventListener('install', event => {
-  console.log('Service Worker installing...');
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('Opened cache, adding files...');
-        return cache.addAll(urlsToCache);
-      })
-      .then(() => {
-        console.log('All files cached successfully');
-      })
+      .then(cache => cache.addAll(urlsToCache))
       .catch(error => {
-        console.error('Cache installation failed:', error);
+        // Silent fail - service worker will retry on next page load
+        if (self.registration) {
+          self.registration.unregister();
+        }
       })
   );
   self.skipWaiting();
@@ -64,9 +60,7 @@ self.addEventListener('fetch', event => {
 
           return response;
         }).catch(error => {
-          // Network request failed, check if we have a cached version
-          console.log('Fetch failed; returning offline page instead.', error);
-          // You could return a custom offline page here if desired
+          // Network request failed, return cached index as fallback
           return caches.match('./index.html');
         });
       })
@@ -75,7 +69,6 @@ self.addEventListener('fetch', event => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', event => {
-  console.log('Service Worker activating...');
   const cacheWhitelist = [CACHE_NAME];
 
   event.waitUntil(
@@ -83,7 +76,6 @@ self.addEventListener('activate', event => {
       return Promise.all(
         cacheNames.map(cacheName => {
           if (cacheWhitelist.indexOf(cacheName) === -1) {
-            console.log('Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
