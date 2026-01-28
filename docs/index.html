@@ -2,39 +2,140 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Professional Business Plan Builder - Offline First">
-    <meta name="theme-color" content="#2c3e50">
-
-    <!-- PWA Configuration -->
-    <link rel="manifest" href="manifest.json">
-
-    <!-- iOS Specific Meta Tags -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta name="description" content="Professional Business Plan Builder - Offline First, Mobile Optimized">
+    <meta name="theme-color" content="#4F46E5">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="Business Plan">
-    <link rel="apple-touch-icon" href="icon-180.png">
-
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Business Plan Builder</title>
+    <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="print.css" media="print">
+    <link rel="apple-touch-icon" href="icon-192.png">
 </head>
 <body>
+    <!-- PWA Install Prompt -->
+    <div id="install-prompt" class="install-prompt" style="display: none;">
+        <div class="install-prompt-content">
+            <div class="install-prompt-icon">📱</div>
+            <div class="install-prompt-text">
+                <strong>Install Business Plan Builder</strong>
+                <p>Access your plans offline anytime</p>
+            </div>
+            <button id="install-btn" class="btn btn-primary btn-sm">Install</button>
+            <button id="dismiss-install" class="btn-close">✕</button>
+        </div>
+    </div>
+
+    <!-- Offline Indicator -->
+    <div id="offline-indicator" class="offline-indicator" style="display: none;">
+        <span>⚠️ You're offline - Changes saved locally</span>
+    </div>
+
+    <!-- Update Available Notification -->
+    <div id="update-notification" class="update-notification" style="display: none;">
+        <span>🎉 New version available!</span>
+        <button id="update-btn" class="btn btn-primary btn-sm">Update</button>
+    </div>
+
     <div id="app">
+        <!-- Hamburger Menu Overlay -->
+        <div id="menu-overlay" class="menu-overlay"></div>
+
+        <!-- Side Menu -->
+        <nav id="side-menu" class="side-menu">
+            <div class="menu-header">
+                <h2>Menu</h2>
+                <button id="close-menu" class="btn-close">✕</button>
+            </div>
+
+            <div class="menu-section">
+                <h3>Current Project</h3>
+                <div id="current-project-name" class="current-project-name">Untitled Project</div>
+                <button id="rename-project-btn" class="menu-btn">
+                    <span class="menu-icon">✏️</span>
+                    <span>Rename Project</span>
+                </button>
+            </div>
+
+            <div class="menu-section">
+                <h3>Projects</h3>
+                <button id="new-project-btn" class="menu-btn">
+                    <span class="menu-icon">➕</span>
+                    <span>New Project</span>
+                </button>
+                <button id="switch-project-btn" class="menu-btn">
+                    <span class="menu-icon">📂</span>
+                    <span>Switch Project</span>
+                </button>
+                <button id="duplicate-project-btn" class="menu-btn">
+                    <span class="menu-icon">📋</span>
+                    <span>Duplicate Project</span>
+                </button>
+            </div>
+
+            <div class="menu-section">
+                <h3>Data</h3>
+                <button id="export-btn" class="menu-btn">
+                    <span class="menu-icon">💾</span>
+                    <span>Export Project</span>
+                </button>
+                <button id="import-btn" class="menu-btn">
+                    <span class="menu-icon">📥</span>
+                    <span>Import Project</span>
+                </button>
+                <button id="copy-data-btn" class="menu-btn">
+                    <span class="menu-icon">📄</span>
+                    <span>Copy Data</span>
+                </button>
+                <button id="paste-data-btn" class="menu-btn">
+                    <span class="menu-icon">📎</span>
+                    <span>Paste Data</span>
+                </button>
+                <input type="file" id="import-file" accept=".json" style="display: none;">
+            </div>
+
+            <div class="menu-section">
+                <h3>Cloud Sync</h3>
+                <div id="sync-status" class="sync-status">
+                    <span class="sync-indicator">●</span>
+                    <span>Local Storage Only</span>
+                </div>
+                <button id="cloud-sync-btn" class="menu-btn" disabled>
+                    <span class="menu-icon">☁️</span>
+                    <span>Setup Cloud Sync (Coming Soon)</span>
+                </button>
+            </div>
+
+            <div class="menu-footer">
+                <small>All data stored locally & encrypted</small>
+            </div>
+        </nav>
+
         <!-- Editor Mode -->
         <div id="editor-mode" class="mode-container">
             <header class="app-header">
                 <div class="header-content">
-                    <h1>Business Plan Builder</h1>
+                    <div class="header-left">
+                        <button id="menu-toggle" class="menu-toggle" aria-label="Open menu">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </button>
+                        <div class="header-title">
+                            <h1>Business Plan Builder</h1>
+                            <div id="header-project-name" class="header-project-subtitle"></div>
+                        </div>
+                    </div>
                     <div class="header-actions">
-                        <span id="online-status" class="online-status">🟢 Online</span>
-                        <span id="save-status" class="save-status">All changes saved</span>
-                        <button id="preview-btn" class="btn btn-secondary">Preview</button>
-                        <button id="export-btn" class="btn btn-secondary">Export/Share</button>
-                        <button id="copy-json-btn" class="btn btn-secondary" title="Copy data as text">Copy Data</button>
-                        <button id="import-btn" class="btn btn-secondary">Import File</button>
-                        <button id="paste-json-btn" class="btn btn-secondary" title="Paste copied data">Paste Data</button>
-                        <input type="file" id="import-file" accept=".json" style="display: none;">
+                        <span id="save-status" class="save-status">
+                            <span class="status-dot"></span>
+                            <span class="status-text">All changes saved</span>
+                        </span>
+                        <button id="preview-btn" class="btn btn-primary">
+                            <span class="btn-icon">👁️</span>
+                            <span class="btn-text">Preview</span>
+                        </button>
                     </div>
                 </div>
             </header>
@@ -340,11 +441,69 @@
         <!-- Print Preview Mode -->
         <div id="preview-mode" class="mode-container" style="display: none;">
             <div class="preview-header">
-                <button id="back-to-edit-btn" class="btn btn-secondary">Back to Editor</button>
-                <button id="print-preview-btn" class="btn btn-primary">Print</button>
+                <button id="back-to-edit-btn" class="btn btn-secondary">
+                    <span>← Back to Editor</span>
+                </button>
+                <button id="print-preview-btn" class="btn btn-primary">
+                    <span class="btn-icon">🖨️</span>
+                    <span>Print</span>
+                </button>
             </div>
             <div id="print-content" class="print-preview">
                 <!-- Content will be generated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Switcher Modal -->
+    <div id="project-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Your Projects</h2>
+                <button id="close-project-modal" class="btn-close">✕</button>
+            </div>
+            <div class="modal-body">
+                <div id="project-list" class="project-list">
+                    <!-- Projects will be listed here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rename Project Modal -->
+    <div id="rename-modal" class="modal" style="display: none;">
+        <div class="modal-content modal-sm">
+            <div class="modal-header">
+                <h2>Rename Project</h2>
+                <button id="close-rename-modal" class="btn-close">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="project-name-input">Project Name</label>
+                    <input type="text" id="project-name-input" class="form-input" placeholder="My Business Plan">
+                </div>
+                <div class="modal-actions">
+                    <button id="cancel-rename" class="btn btn-secondary">Cancel</button>
+                    <button id="save-rename" class="btn btn-primary">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Delete Modal -->
+    <div id="delete-modal" class="modal" style="display: none;">
+        <div class="modal-content modal-sm">
+            <div class="modal-header">
+                <h2>Delete Project?</h2>
+                <button id="close-delete-modal" class="btn-close">✕</button>
+            </div>
+            <div class="modal-body">
+                <p class="warning-text">Are you sure you want to delete "<strong id="delete-project-name"></strong>"?</p>
+                <p class="help-text">This action cannot be undone.</p>
+                <div class="modal-actions">
+                    <button id="cancel-delete" class="btn btn-secondary">Cancel</button>
+                    <button id="confirm-delete" class="btn btn-danger">Delete</button>
+                </div>
             </div>
         </div>
     </div>

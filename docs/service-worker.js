@@ -1,9 +1,9 @@
 
 // Business Plan Builder - Service Worker
 // Enables offline functionality
-// FIXED: Relative paths & Icon Caching
+// Modern PWA with Multi-Project Support
 
-const CACHE_NAME = 'bp-builder-v2'; // Bumped version
+const CACHE_NAME = 'bp-builder-v3'; // Modernized version
 
 const urlsToCache = [
   './',                // Current folder

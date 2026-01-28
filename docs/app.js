@@ -1,5 +1,6 @@
 // ===============================================
-// Business Plan Builder - Main Application
+// Business Plan Builder - Modernized Application
+// Multi-Project Support, Offline-First, PWA
 // ===============================================
 
 class BusinessPlanBuilder {
@@ -9,6 +10,10 @@ class BusinessPlanBuilder {
         this.saveTimeout = null;
         this.data = {};
         this.phases = [];
+        this.currentProjectId = null;
+        this.projects = {};
+        this.deferredPrompt = null;
+        this.clipboard = null;
 
         this.init();
     }
@@ -18,12 +23,16 @@ class BusinessPlanBuilder {
     // ===============================================
 
     init() {
-        this.loadData();
+        this.loadProjects();
+        this.initCurrentProject();
         this.setupEventListeners();
         this.setupAutoSave();
         this.initializePhases();
         this.updateCalculations();
         this.updateUI();
+        this.setupPWA();
+        this.setupOfflineDetection();
+        this.updateProjectName();
     }
 
     setupEventListeners() {
@@ -38,12 +47,40 @@ class BusinessPlanBuilder {
         document.getElementById('print-preview-btn').addEventListener('click', () => this.print());
         document.getElementById('edit-mode-btn').addEventListener('click', () => this.hidePreview());
 
+        // Menu System
+        document.getElementById('menu-toggle').addEventListener('click', () => this.toggleMenu());
+        document.getElementById('close-menu').addEventListener('click', () => this.closeMenu());
+        document.getElementById('menu-overlay').addEventListener('click', () => this.closeMenu());
+
+        // Project Management
+        document.getElementById('new-project-btn').addEventListener('click', () => this.createNewProject());
+        document.getElementById('switch-project-btn').addEventListener('click', () => this.showProjectSwitcher());
+        document.getElementById('rename-project-btn').addEventListener('click', () => this.showRenameModal());
+        document.getElementById('duplicate-project-btn').addEventListener('click', () => this.duplicateProject());
+
         // Export/Import
-        document.getElementById('export-btn').addEventListener('click', () => this.exportData());
+        document.getElementById('export-btn').addEventListener('click', () => {
+            this.closeMenu();
+            setTimeout(() => this.exportData(), 300);
+        });
         document.getElementById('import-btn').addEventListener('click', () => {
-            document.getElementById('import-file').click();
+            this.closeMenu();
+            setTimeout(() => document.getElementById('import-file').click(), 300);
         });
         document.getElementById('import-file').addEventListener('change', (e) => this.importData(e));
+
+        // Copy/Paste Data
+        document.getElementById('copy-data-btn').addEventListener('click', () => this.copyData());
+        document.getElementById('paste-data-btn').addEventListener('click', () => this.pasteData());
+
+        // Modals
+        document.getElementById('close-project-modal').addEventListener('click', () => this.closeProjectModal());
+        document.getElementById('close-rename-modal').addEventListener('click', () => this.closeRenameModal());
+        document.getElementById('close-delete-modal').addEventListener('click', () => this.closeDeleteModal());
+        document.getElementById('cancel-rename').addEventListener('click', () => this.closeRenameModal());
+        document.getElementById('save-rename').addEventListener('click', () => this.saveRename());
+        document.getElementById('cancel-delete').addEventListener('click', () => this.closeDeleteModal());
+        document.getElementById('confirm-delete').addEventListener('click', () => this.confirmDelete());
 
         // Phase management
         document.getElementById('add-phase-btn').addEventListener('click', () => this.addPhase());
@@ -71,6 +108,16 @@ class BusinessPlanBuilder {
         // Set default date to today
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('proposalDate').value = today;
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                this.closeMenu();
+                this.closeProjectModal();
+                this.closeRenameModal();
+                this.closeDeleteModal();
+            }
+        });
     }
 
     setupAutoSave() {
@@ -90,12 +137,440 @@ class BusinessPlanBuilder {
 
     updateSaveStatus(status) {
         const statusEl = document.getElementById('save-status');
+        const statusText = statusEl.querySelector('.status-text');
+
         if (status === 'saving') {
-            statusEl.textContent = 'Saving...';
-            statusEl.className = 'save-status saving';
+            statusText.textContent = 'Saving...';
+            statusEl.classList.add('saving');
         } else {
-            statusEl.textContent = 'All changes saved';
-            statusEl.className = 'save-status';
+            statusText.textContent = 'All changes saved';
+            statusEl.classList.remove('saving');
+        }
+    }
+
+    // ===============================================
+    // PWA Setup
+    // ===============================================
+
+    setupPWA() {
+        // Install prompt
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            this.deferredPrompt = e;
+            this.showInstallPrompt();
+        });
+
+        // Install button
+        const installBtn = document.getElementById('install-btn');
+        if (installBtn) {
+            installBtn.addEventListener('click', async () => {
+                if (this.deferredPrompt) {
+                    this.deferredPrompt.prompt();
+                    const { outcome } = await this.deferredPrompt.userChoice;
+                    console.log(`Install prompt outcome: ${outcome}`);
+                    this.deferredPrompt = null;
+                    this.hideInstallPrompt();
+                }
+            });
+        }
+
+        // Dismiss install
+        const dismissInstall = document.getElementById('dismiss-install');
+        if (dismissInstall) {
+            dismissInstall.addEventListener('click', () => {
+                this.hideInstallPrompt();
+                localStorage.setItem('installPromptDismissed', 'true');
+            });
+        }
+
+        // Check if already installed
+        window.addEventListener('appinstalled', () => {
+            console.log('PWA installed');
+            this.hideInstallPrompt();
+        });
+
+        // Service Worker Update
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                this.showUpdateNotification();
+            });
+        }
+    }
+
+    showInstallPrompt() {
+        const dismissed = localStorage.getItem('installPromptDismissed');
+        if (!dismissed && this.deferredPrompt) {
+            setTimeout(() => {
+                document.getElementById('install-prompt').style.display = 'block';
+            }, 3000); // Show after 3 seconds
+        }
+    }
+
+    hideInstallPrompt() {
+        document.getElementById('install-prompt').style.display = 'none';
+    }
+
+    showUpdateNotification() {
+        const notification = document.getElementById('update-notification');
+        notification.style.display = 'flex';
+
+        document.getElementById('update-btn').addEventListener('click', () => {
+            window.location.reload();
+        });
+    }
+
+    setupOfflineDetection() {
+        const updateOnlineStatus = () => {
+            const indicator = document.getElementById('offline-indicator');
+            if (!navigator.onLine) {
+                indicator.style.display = 'block';
+            } else {
+                indicator.style.display = 'none';
+            }
+        };
+
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+        updateOnlineStatus();
+    }
+
+    // ===============================================
+    // Menu System
+    // ===============================================
+
+    toggleMenu() {
+        const menu = document.getElementById('side-menu');
+        const overlay = document.getElementById('menu-overlay');
+        const toggle = document.getElementById('menu-toggle');
+
+        menu.classList.toggle('active');
+        overlay.classList.toggle('active');
+        toggle.classList.toggle('active');
+    }
+
+    closeMenu() {
+        document.getElementById('side-menu').classList.remove('active');
+        document.getElementById('menu-overlay').classList.remove('active');
+        document.getElementById('menu-toggle').classList.remove('active');
+    }
+
+    // ===============================================
+    // Project Management
+    // ===============================================
+
+    loadProjects() {
+        const saved = localStorage.getItem('businessPlanProjects');
+        if (saved) {
+            this.projects = JSON.parse(saved);
+        }
+
+        // Get current project ID
+        this.currentProjectId = localStorage.getItem('currentProjectId');
+
+        // If no projects exist or current project doesn't exist, create default
+        if (Object.keys(this.projects).length === 0 || !this.currentProjectId || !this.projects[this.currentProjectId]) {
+            this.createDefaultProject();
+        }
+    }
+
+    createDefaultProject() {
+        const projectId = this.generateId();
+        this.projects[projectId] = {
+            id: projectId,
+            name: 'My Business Plan',
+            createdAt: new Date().toISOString(),
+            lastModified: new Date().toISOString(),
+            data: {}
+        };
+        this.currentProjectId = projectId;
+        this.saveProjects();
+    }
+
+    saveProjects() {
+        localStorage.setItem('businessPlanProjects', JSON.stringify(this.projects));
+        localStorage.setItem('currentProjectId', this.currentProjectId);
+    }
+
+    initCurrentProject() {
+        if (this.currentProjectId && this.projects[this.currentProjectId]) {
+            this.data = this.projects[this.currentProjectId].data || {};
+            this.populateForm();
+        }
+    }
+
+    createNewProject() {
+        // Save current project first
+        this.saveData();
+
+        const projectId = this.generateId();
+        const projectName = `Business Plan ${Object.keys(this.projects).length + 1}`;
+
+        this.projects[projectId] = {
+            id: projectId,
+            name: projectName,
+            createdAt: new Date().toISOString(),
+            lastModified: new Date().toISOString(),
+            data: {}
+        };
+
+        this.currentProjectId = projectId;
+        this.data = {};
+        this.phases = [];
+
+        this.saveProjects();
+        this.clearForm();
+        this.initializePhases();
+        this.updateProjectName();
+        this.closeMenu();
+        this.goToStep(1);
+
+        // Show notification
+        this.showNotification(`Created new project: ${projectName}`);
+    }
+
+    duplicateProject() {
+        this.saveData();
+
+        const currentProject = this.projects[this.currentProjectId];
+        const projectId = this.generateId();
+        const projectName = `${currentProject.name} (Copy)`;
+
+        this.projects[projectId] = {
+            id: projectId,
+            name: projectName,
+            createdAt: new Date().toISOString(),
+            lastModified: new Date().toISOString(),
+            data: JSON.parse(JSON.stringify(currentProject.data)) // Deep clone
+        };
+
+        this.currentProjectId = projectId;
+        this.data = this.projects[projectId].data;
+
+        this.saveProjects();
+        this.populateForm();
+        this.updateProjectName();
+        this.closeMenu();
+
+        this.showNotification(`Duplicated project: ${projectName}`);
+    }
+
+    switchProject(projectId) {
+        if (projectId === this.currentProjectId) {
+            this.closeProjectModal();
+            return;
+        }
+
+        // Save current project
+        this.saveData();
+
+        // Switch to new project
+        this.currentProjectId = projectId;
+        this.data = this.projects[projectId].data || {};
+
+        localStorage.setItem('currentProjectId', projectId);
+
+        this.populateForm();
+        this.updateProjectName();
+        this.closeProjectModal();
+        this.goToStep(1);
+
+        this.showNotification(`Switched to: ${this.projects[projectId].name}`);
+    }
+
+    showProjectSwitcher() {
+        this.closeMenu();
+
+        setTimeout(() => {
+            const modal = document.getElementById('project-modal');
+            const projectList = document.getElementById('project-list');
+
+            projectList.innerHTML = '';
+
+            const projectArray = Object.values(this.projects).sort((a, b) =>
+                new Date(b.lastModified) - new Date(a.lastModified)
+            );
+
+            if (projectArray.length === 0) {
+                projectList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📁</div>
+                        <p>No projects yet</p>
+                    </div>
+                `;
+            } else {
+                projectArray.forEach(project => {
+                    const projectEl = document.createElement('div');
+                    projectEl.className = 'project-item';
+                    if (project.id === this.currentProjectId) {
+                        projectEl.classList.add('active');
+                    }
+
+                    const lastModified = new Date(project.lastModified).toLocaleDateString();
+                    const created = new Date(project.createdAt).toLocaleDateString();
+
+                    projectEl.innerHTML = `
+                        <div class="project-info">
+                            <div class="project-name">${this.escapeHtml(project.name)}</div>
+                            <div class="project-meta">
+                                <span>Modified: ${lastModified}</span>
+                                <span>Created: ${created}</span>
+                            </div>
+                        </div>
+                        <div class="project-actions">
+                            <button class="project-action-btn delete" data-id="${project.id}" data-name="${this.escapeHtml(project.name)}">
+                                🗑️
+                            </button>
+                        </div>
+                    `;
+
+                    // Click to switch
+                    projectEl.querySelector('.project-info').addEventListener('click', () => {
+                        this.switchProject(project.id);
+                    });
+
+                    // Delete button
+                    projectEl.querySelector('.delete').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        this.showDeleteModal(project.id, project.name);
+                    });
+
+                    projectList.appendChild(projectEl);
+                });
+            }
+
+            modal.style.display = 'flex';
+        }, 300);
+    }
+
+    closeProjectModal() {
+        document.getElementById('project-modal').style.display = 'none';
+    }
+
+    showRenameModal() {
+        this.closeMenu();
+
+        setTimeout(() => {
+            const modal = document.getElementById('rename-modal');
+            const input = document.getElementById('project-name-input');
+            const currentProject = this.projects[this.currentProjectId];
+
+            input.value = currentProject.name;
+            modal.style.display = 'flex';
+            input.focus();
+            input.select();
+        }, 300);
+    }
+
+    closeRenameModal() {
+        document.getElementById('rename-modal').style.display = 'none';
+    }
+
+    saveRename() {
+        const newName = document.getElementById('project-name-input').value.trim();
+
+        if (newName && newName.length > 0) {
+            this.projects[this.currentProjectId].name = newName;
+            this.projects[this.currentProjectId].lastModified = new Date().toISOString();
+            this.saveProjects();
+            this.updateProjectName();
+            this.closeRenameModal();
+            this.showNotification(`Renamed to: ${newName}`);
+        }
+    }
+
+    showDeleteModal(projectId, projectName) {
+        this.closeProjectModal();
+
+        setTimeout(() => {
+            const modal = document.getElementById('delete-modal');
+            document.getElementById('delete-project-name').textContent = projectName;
+            modal.dataset.projectId = projectId;
+            modal.style.display = 'flex';
+        }, 300);
+    }
+
+    closeDeleteModal() {
+        document.getElementById('delete-modal').style.display = 'none';
+    }
+
+    confirmDelete() {
+        const modal = document.getElementById('delete-modal');
+        const projectId = modal.dataset.projectId;
+
+        // Can't delete if it's the only project
+        if (Object.keys(this.projects).length === 1) {
+            alert('Cannot delete the only project. Create a new project first.');
+            this.closeDeleteModal();
+            return;
+        }
+
+        // Can't delete current project without switching first
+        if (projectId === this.currentProjectId) {
+            // Switch to another project
+            const otherProjectId = Object.keys(this.projects).find(id => id !== projectId);
+            this.currentProjectId = otherProjectId;
+            this.data = this.projects[otherProjectId].data || {};
+            this.populateForm();
+        }
+
+        delete this.projects[projectId];
+        this.saveProjects();
+        this.updateProjectName();
+        this.closeDeleteModal();
+
+        this.showNotification('Project deleted');
+    }
+
+    updateProjectName() {
+        if (this.currentProjectId && this.projects[this.currentProjectId]) {
+            const name = this.projects[this.currentProjectId].name;
+            document.getElementById('current-project-name').textContent = name;
+            document.getElementById('header-project-name').textContent = name;
+        }
+    }
+
+    generateId() {
+        return 'proj-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+    }
+
+    // ===============================================
+    // Copy/Paste Data
+    // ===============================================
+
+    async copyData() {
+        try {
+            const dataStr = JSON.stringify(this.data, null, 2);
+            await navigator.clipboard.writeText(dataStr);
+            this.clipboard = this.data;
+            this.closeMenu();
+            this.showNotification('Project data copied to clipboard');
+        } catch (err) {
+            // Fallback for older browsers
+            this.clipboard = this.data;
+            this.closeMenu();
+            this.showNotification('Project data copied');
+        }
+    }
+
+    async pasteData() {
+        try {
+            const text = await navigator.clipboard.readText();
+            const data = JSON.parse(text);
+            this.data = data;
+            this.populateForm();
+            this.handleInputChange();
+            this.closeMenu();
+            this.showNotification('Project data pasted');
+        } catch (err) {
+            if (this.clipboard) {
+                this.data = JSON.parse(JSON.stringify(this.clipboard));
+                this.populateForm();
+                this.handleInputChange();
+                this.closeMenu();
+                this.showNotification('Project data pasted');
+            } else {
+                alert('No data to paste. Copy data from another project first.');
+            }
         }
     }
 
@@ -149,14 +624,14 @@ class BusinessPlanBuilder {
         const nextBtn = document.getElementById('next-btn');
         if (this.currentStep === this.totalSteps) {
             nextBtn.textContent = 'Finish';
-            nextBtn.style.display = 'none'; // Hide on review page
+            nextBtn.style.display = 'none';
         } else {
             nextBtn.textContent = 'Next';
             nextBtn.style.display = 'block';
         }
 
         // Scroll to top
-        window.scrollTo(0, 0);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     // ===============================================
@@ -211,17 +686,16 @@ class BusinessPlanBuilder {
             lastSaved: new Date().toISOString()
         };
 
-        localStorage.setItem('businessPlanData', JSON.stringify(data));
         this.data = data;
-        this.updateSaveStatus('saved');
-    }
 
-    loadData() {
-        const savedData = localStorage.getItem('businessPlanData');
-        if (savedData) {
-            this.data = JSON.parse(savedData);
-            this.populateForm();
+        // Save to current project
+        if (this.currentProjectId && this.projects[this.currentProjectId]) {
+            this.projects[this.currentProjectId].data = data;
+            this.projects[this.currentProjectId].lastModified = new Date().toISOString();
+            this.saveProjects();
         }
+
+        this.updateSaveStatus('saved');
     }
 
     populateForm() {
@@ -242,20 +716,34 @@ class BusinessPlanBuilder {
         this.updateCalculations();
     }
 
+    clearForm() {
+        // Clear all form fields
+        document.querySelectorAll('.form-input, .form-textarea').forEach(input => {
+            input.value = '';
+        });
+
+        // Set default date
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('proposalDate').value = today;
+    }
+
     exportData() {
         const dataStr = JSON.stringify(this.data, null, 2);
         const blob = new Blob([dataStr], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
 
+        const projectName = this.projects[this.currentProjectId].name.replace(/[^a-z0-9]/gi, '-').toLowerCase();
+        const fileName = `${projectName}-${new Date().toISOString().split('T')[0]}.json`;
+
         const a = document.createElement('a');
         a.href = url;
-        a.download = `business-plan-${new Date().toISOString().split('T')[0]}.json`;
+        a.download = fileName;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
 
-        alert('Data exported successfully! You can import this file on another device.');
+        this.showNotification(`Exported: ${fileName}`);
     }
 
     importData(event) {
@@ -266,16 +754,36 @@ class BusinessPlanBuilder {
         reader.onload = (e) => {
             try {
                 const data = JSON.parse(e.target.result);
+
+                // Create a new project with imported data
+                const projectId = this.generateId();
+                const projectName = data.projectTitle || 'Imported Project';
+
+                this.projects[projectId] = {
+                    id: projectId,
+                    name: projectName,
+                    createdAt: new Date().toISOString(),
+                    lastModified: new Date().toISOString(),
+                    data: data
+                };
+
+                this.currentProjectId = projectId;
                 this.data = data;
-                localStorage.setItem('businessPlanData', JSON.stringify(data));
+
+                this.saveProjects();
                 this.populateForm();
-                alert('Data imported successfully!');
+                this.updateProjectName();
+
+                this.showNotification(`Imported: ${projectName}`);
             } catch (error) {
                 alert('Error importing file. Please make sure it\'s a valid export file.');
                 console.error(error);
             }
         };
         reader.readAsText(file);
+
+        // Reset file input
+        event.target.value = '';
     }
 
     // ===============================================
@@ -284,7 +792,6 @@ class BusinessPlanBuilder {
 
     initializePhases() {
         if (this.phases.length === 0) {
-            // Add default phase
             this.addPhase();
         } else {
             this.renderPhases();
@@ -442,7 +949,7 @@ class BusinessPlanBuilder {
     // ===============================================
 
     showPreview() {
-        this.saveData(); // Save before preview
+        this.saveData();
         this.generatePreview();
         document.getElementById('editor-mode').style.display = 'none';
         document.getElementById('preview-mode').style.display = 'block';
@@ -459,10 +966,8 @@ class BusinessPlanBuilder {
         const printContent = document.getElementById('print-content');
         const data = this.data;
 
-        // Update calculations one more time
         this.updateCalculations();
 
-        // Get current calculated values
         const calcs = {
             grossProfit: document.getElementById('grossProfit').textContent,
             roi: document.getElementById('roi').textContent,
@@ -775,6 +1280,35 @@ class BusinessPlanBuilder {
             day: 'numeric'
         });
     }
+
+    showNotification(message) {
+        // Create a simple toast notification
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--gray-900);
+            color: var(--white);
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xl);
+            z-index: 10000;
+            animation: slideUp 0.3s ease;
+            max-width: 300px;
+            word-wrap: break-word;
+        `;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.animation = 'fadeOut 0.3s ease';
+            toast.style.opacity = '0';
+            setTimeout(() => {
+                document.body.removeChild(toast);
+            }, 300);
+        }, 3000);
+    }
 }
 
 // ===============================================
@@ -786,6 +1320,16 @@ if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./service-worker.js')
             .then(registration => {
                 console.log('ServiceWorker registered:', registration);
+
+                // Check for updates
+                registration.addEventListener('updatefound', () => {
+                    const newWorker = registration.installing;
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            console.log('New version available');
+                        }
+                    });
+                });
             })
             .catch(err => {
                 console.log('ServiceWorker registration failed:', err);
