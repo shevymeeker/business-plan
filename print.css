@@ -69,14 +69,16 @@
         font-size: 18pt;
         margin-top: 1.5em;
         margin-bottom: 0.5em;
-        color: #2c3e50;
+        color: #000;
+        font-weight: 700;
     }
 
     h3 {
         font-size: 14pt;
         margin-top: 1em;
         margin-bottom: 0.5em;
-        color: #34495e;
+        color: #000;
+        font-weight: 600;
     }
 
     p {
@@ -101,7 +103,7 @@
         font-size: 28pt;
         font-weight: bold;
         margin: 2em 0;
-        color: #2c3e50;
+        color: #000;
         text-transform: uppercase;
         letter-spacing: 3px;
     }
@@ -132,25 +134,23 @@
     }
 
     .print-section h2 {
-        border-bottom: 2px solid #2c3e50;
+        border-bottom: 2px solid #000;
         padding-bottom: 0.25em;
         margin-bottom: 1em;
     }
 
     /* Objectives */
     .print-objective {
-        background: #f8f9fa;
-        padding: 1em;
+        padding: 0;
         margin-bottom: 1em;
-        border-left: 4px solid #3498db;
+        line-height: 1.8;
     }
 
     .print-financial-objective {
-        background: #e8f4f8;
-        padding: 1em;
+        padding: 0;
         margin-bottom: 1em;
-        border-left: 4px solid #27ae60;
-        font-weight: 600;
+        margin-top: 1em;
+        line-height: 1.8;
     }
 
     /* Lists */
@@ -176,18 +176,18 @@
 
     /* Phases */
     .print-phase {
-        background: #f8f9fa;
-        border: 1px solid #ddd;
-        padding: 1em;
-        margin-bottom: 1em;
+        padding: 0;
+        margin-bottom: 1.5em;
+        margin-left: 1em;
         page-break-inside: avoid;
     }
 
     .print-phase h4 {
         font-size: 12pt;
-        color: #2c3e50;
+        color: #000;
         margin-bottom: 0.5em;
-        font-weight: 600;
+        margin-top: 0.5em;
+        font-weight: 700;
     }
 
     /* Budget Tables */
@@ -206,13 +206,15 @@
     }
 
     .print-budget-table th {
-        background: #2c3e50;
-        color: white;
-        font-weight: 600;
+        background: #f8f9fa;
+        color: #000;
+        font-weight: 700;
+        border-bottom: 2px solid #000;
     }
 
     .print-budget-table tr:last-child td {
-        border-bottom: 2px solid #2c3e50;
+        border-bottom: 2px solid #000;
+        font-weight: 700;
     }
 
     .print-budget-table .amount {
@@ -222,25 +224,25 @@
 
     /* Financial Summary Box */
     .print-financial-summary {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
+        border: 2px solid #000;
         padding: 1.5em;
         margin: 1.5em 0;
         page-break-inside: avoid;
     }
 
     .print-financial-summary h3 {
-        color: white;
+        color: #000;
         margin-top: 0;
-        border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+        border-bottom: 2px solid #000;
         padding-bottom: 0.5em;
+        margin-bottom: 1em;
     }
 
     .print-financial-row {
         display: flex;
         justify-content: space-between;
         padding: 0.5em 0;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        border-bottom: 1px solid #ddd;
     }
 
     .print-financial-row:last-child {
@@ -250,39 +252,40 @@
     .print-financial-row.highlight {
         font-weight: 700;
         font-size: 12pt;
-        background: rgba(255, 255, 255, 0.1);
-        padding: 0.75em;
-        margin: 0.5em -0.5em;
+        padding: 0.75em 0;
+        margin: 0.25em 0;
     }
 
     .print-financial-row .label {
         font-weight: 500;
+        color: #000;
     }
 
     .print-financial-row .value {
         font-weight: 700;
         font-family: 'Courier New', monospace;
+        color: #000;
     }
 
     /* Property Details Grid */
     .print-property-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 1em;
-        margin-bottom: 1em;
+        gap: 0.5em 2em;
+        margin-bottom: 1.5em;
+        margin-top: 1em;
     }
 
     .print-property-item {
-        background: #f8f9fa;
-        padding: 0.75em;
-        border-left: 3px solid #3498db;
+        padding: 0.5em 0;
     }
 
     .print-property-item strong {
-        display: block;
-        color: #2c3e50;
-        margin-bottom: 0.25em;
-        font-size: 10pt;
+        display: inline;
+        color: #000;
+        margin-right: 0.5em;
+        font-size: 11pt;
+        font-weight: 600;
     }
 
     /* Footer for pages */
@@ -297,9 +300,8 @@
 
     /* Timeline formatting */
     .print-timeline {
-        margin-left: 2em;
-        border-left: 3px solid #3498db;
-        padding-left: 1em;
+        margin-left: 1em;
+        padding-left: 0;
     }
 
     .print-timeline-item {
@@ -308,26 +310,18 @@
     }
 
     .print-timeline-item::before {
-        content: '●';
-        position: absolute;
-        left: -1.5em;
-        color: #3498db;
-        font-size: 14pt;
+        content: '';
     }
 
     /* Risk mitigation highlighting */
     .print-risk-item {
-        background: #fff3cd;
-        padding: 0.5em;
+        padding: 0;
         margin-bottom: 0.5em;
-        border-left: 3px solid #f39c12;
     }
 
     /* Market differentiation */
     .print-differentiation-item {
-        background: #d4edda;
-        padding: 0.5em;
+        padding: 0;
         margin-bottom: 0.5em;
-        border-left: 3px solid #27ae60;
     }
 }
